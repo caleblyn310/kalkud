@@ -1,0 +1,180 @@
+public function store(Request $request)
+    {
+        //ob_end_clean();
+        //ob_start();
+
+        if($request->hasFile('file_exc')) {
+            $path = $request->file_exc->path();
+            
+            /*Excel::load($path . '/exported.xls', function($reader) 
+            {
+                $reader->sheet(function($sheet) 
+                {
+                    $sheet->appendRow([
+                         'test1', 'test2',
+                     ]);
+                });
+            })->export('xls');*/
+
+            Excel::load($path, function ($reader) {
+                $reader->sheet('Tapel20182019', function ($sheet) { 
+                    $sheet->appendRow(['test1','test2',]);
+                    //dd($sheet);
+                });
+            })->export('xls');
+        }
+
+            /*fclose($data);
+            $dtex[] = array('','Total Penerimaan',$totalkredit);
+
+            return Excel::create('Laporan VA BCA', function($excel) use ($dtex,$row) {
+            $excel->sheet('Sheet 1', function($sheet) use ($dtex,$row)
+            {
+                $sheet->cells('A3:C3', function($cells) {
+
+                    // call cell manipulation methods
+                    $cells->setBackground('#7CFC00');
+
+                });
+                $sheet->setBorder('A3:C'.$row,'thin');
+                $sheet->setAutoSize(true);
+                $sheet->with($dtex,null,'A1',true,false);
+            });
+            })->export('xls');*/
+
+        /*if($request->hasFile('file_bca')){
+            $dtex = [];//$dtex[] = array('Tanggal'=>'','No VA BCA'=>'','Nominal'=>'');
+            $dtex[] = array('Penerimaan VA BCA SMAKKKB');
+            $dtex[] = array('Tanggal','NO VA BCA','Nominal');
+            $row = 4;
+
+            //print "<table align='center' border='1' cellspacing='1' cellpadding='3'>";
+            //print "<tr><th>Tanggal</th><th>Kode Transaksi</th><th>NO VA</th><th>Kelas</th><th>Nama Siswa & Keterangan</th>";
+            //print "<th>Debit</th><th>Kredit</th></tr>";
+            $totaldebit = 0;
+            $totalkredit = 0;
+            foreach ($request->filebca as $fb) {
+
+            $path = $fb->path();
+            /*$data = Excel::selectSheets('Sheet3')->load($path, function($reader) {})->get();
+            $fp = fopen(public_path('/abc.txt'),'a');
+            fwrite($fp,"006862"."U".date('dmY').PHP_EOL);
+            if($data->count()){
+                foreach ($data as $key => $value) {
+                    /*$inv = new Inventory();
+
+                    $inv->jenis_aktiva = $value->ja;
+                    $inv->quantity = $value->q;
+                    $inv->harga = $value->hp;
+                    $inv->total = $value->total;
+                    $inv->tanggal_beli = $value->tglbeli;
+                    $inv->maks = $value->maks;
+                    $inv->penyusutan = $value->penyusutan;
+                    $inv->pemakaian = $value->pemakaian;
+                    $inv->status = $value->status;
+                    $inv->id_cat = $value->cat;
+                    $inv->save();
+                    DB::table('locinven')->insert([[
+                        'id_inven' => $value->no, 
+                        'id_kodeunit' => $value->lok,
+                    ]]);//
+
+            
+            fwrite($fp,"1".str_pad($value->nova,23," ",STR_PAD_RIGHT)."00000".str_pad($value->nama,"30"," ",STR_PAD_RIGHT)."29122023IDR".PHP_EOL);
+            
+                }
+                fwrite($fp,"206862" . str_pad("100",7,"0",STR_PAD_LEFT) .
+                str_pad("0",15,"0",STR_PAD_RIGHT).PHP_EOL);
+            fclose($fp);
+            }
+            return redirect('testing');
+            $data = fopen($path,"r");
+            
+            //print fgets($data)."<br>";
+            //print_r(collect($data)->toJson());
+            //print_r($data->count());
+            
+            while(!feof($data))
+            {
+                $datos = fgets($data);
+                //dd($datos);
+
+                if(substr($datos,0,1) != "") {
+                        $row++;
+                    //$strtemp = substr($datos,43);
+                    //print_r(substr($strtemp,0,16));
+                    //if(substr(substr($datos,43),9,2) == "03" || !is_numeric(substr($datos,44,1)))
+                    //{
+                        /*print "<tr style='background-color: whitesmoke;' onmouseover=\"this.style.backgroundColor='lightblue'\" ";
+                        print "onmouseout=\"this.style.backgroundColor='whitesmoke'\">";
+                        print "<td>".substr($datos,62,2)."-".substr($datos,64,2)."-20".substr($datos,66,2)."</td>";
+                        print "<td>KodTtr</td>";//substr($datos,0,18)."</td>";
+                        print "<td>".substr($datos, 0,5).substr($datos, 10,11)."</td>";
+                        print "<td align='center'>SISWA KELAS</td>";
+                        print "<td><span>Nama Siswa</span>";
+                        print "<br><span style='font-size:10px;color:red;'>" . substr($datos, 79, 15) . substr($datos, 94,14) . "</span></td>";
+                        print "<td>Rp. 0</td>";//.ltrim(substr($datos, 104,16),"0") . "</td>";$totaldebit += substr($datos, 104,16);
+                        print "<td>Rp. ".ltrim(substr($datos, 47,13),"0") . "</td></tr>";$totalkredit += substr($datos, 47,13);
+
+                        $dtex[] = array('Tanggal'=>"20".substr($datos,66,2)."-".substr($datos,64,2)."-".substr($datos,62,2),
+                            'No VA BCA'=>substr($datos, 0,5).substr($datos, 10,11),
+                            'Nominal'=>ltrim(substr($datos, 47,13),"0"));
+                        $totalkredit += substr($datos, 47,13);
+                    //}
+
+                }
+                //else
+                    //print "<tr><td align='right' colspan='5'>Total</td><td>Rp. $totaldebit</td><td>Rp. $totalkredit</td></tr>";
+            }
+        }*/
+            //print "<tr><td align='right' colspan='5'>Total</td><td>Rp. $totaldebit</td><td>Rp. $totalkredit</td></tr>";
+            //print "</table>";
+            /*fclose($data);
+            $dtex[] = array('','Total Penerimaan',$totalkredit);
+
+            return Excel::create('Laporan VA BCA', function($excel) use ($dtex,$row) {
+            $excel->sheet('Sheet 1', function($sheet) use ($dtex,$row)
+            {
+                $sheet->cells('A3:C3', function($cells) {
+
+                    // call cell manipulation methods
+                    $cells->setBackground('#7CFC00');
+
+                });
+                $sheet->setBorder('A3:C'.$row,'thin');
+                $sheet->setAutoSize(true);
+                $sheet->with($dtex,null,'A1',true,false);
+            });
+            })->export('xls');
+
+            //return Excel::loadView('testview', compact('dtex'))->setTitle('FileName')->sheet('SheetName')->export('xlsx');
+
+            /*if(!empty($data)){
+                print_r($data.count());
+                $fp = fopen('C:/Users/caleb/Desktop/abc.txt','a');
+                fwrite($fp,date('ddmmY').PHP_EOL);
+                foreach ($data as $key => $value) {
+                    $insert[] = ['acc_number' => $request->input('acc_num'), 'no_induk' => $value->kode_d_ger, 'namasiswa' => $value->tanggal];
+                    fwrite($fp,$request->input('acc_num'). '     ' . $value->tanggal . '    ' . $value->kode_d_ger . PHP_EOL);
+                }
+                if(!empty($insert)){
+                    fclose($fp);
+                    DB::table('cobacoba')->insert($insert);
+                    dd('Insert Record successfully.');
+                    sleep(5);
+                    return view('testing');
+                }
+            }*/
+    }
+        /*if($request->input('kodeper') == 6778)
+        {
+            $fp = fopen('C:/Users/caleb/Desktop/abc.txt','a');
+            fwrite($fp,"0".$request->input('kodeper')."U".date('dmY').PHP_EOL);
+            fwrite($fp,"1".str_pad($request->input('acc_num'),"13","0",0) . "00".PHP_EOL);
+            fwrite($fp,"2" . $request->input('kodeper') .
+                str_pad("12",7,"0",0) .
+                str_pad("12345",13,"0",0)."00".PHP_EOL);
+            fclose($fp);
+        }*/
+
+        //return redirect()->action('TestingController@index');

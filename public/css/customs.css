@@ -1,0 +1,105 @@
+body {
+    background-image: url(../get_connected.png) ;
+    background-position: right top;
+    background-repeat: no-repeat;
+    background-size: 100%; 
+    background-color: #1D1A31;
+    background-attachment: fixed;
+    color: darkblue;
+    font-size: 110%;
+}
+
+hr {
+    background-color: #D8BA3D;
+}
+
+#footerbg1 {
+    display: none;
+}
+
+#footerbg2 {
+    display: none;
+}
+
+.card {
+    background-color: rgba(254,254, 254, 0.5);
+    text-decoration-color: white;
+}
+
+#formcard {
+    padding-top: 25px;
+}
+
+button {
+    text-align: center;
+}
+
+@media screen and (max-width: 1024px) {
+    body {
+        background-image: url(../get_connected_portrait-01.png);
+	background-attachment: scroll;
+    }
+    #kontain {
+        padding-top: 580px ;
+        padding-left: 15px ;
+    }
+
+    #xxx { padding: 0px; }
+    
+    #footerbg1 {
+        display: initial;
+    }
+
+    #formcard {
+	padding-top: 585px ;
+    }
+
+    #judul, #lblreg, #lblkonf {
+        text-align: center;
+    }
+
+    #flmsg {
+        position:absolute; left:10px; top:20px;
+    }
+}
+
+@media screen and (min-width: 1025px) {
+    body {
+        font-size: 110%;
+    }
+    .card {
+    background-color: rgba(254,254, 254, 0.7);
+    text-decoration-color: white;
+    }
+
+    #kontain {
+    padding-top: 160px ;
+    padding-left: 150px ;
+    }
+
+    #footerbg2 {
+        display: initial;
+    }
+}
+
+@media screen and (min-width: 1367px) {
+    body {
+        font-size: 110%;
+    }
+
+    .card {
+    background-color: rgba(254,254, 254, 0.8);
+    text-decoration-color: white;
+    }
+
+    #footerbg2 {
+        display: initial;
+    }
+
+    #kontain {
+    padding-top: 150px;
+    padding-left: 100px;
+}
+}
+
+#errmsg{ color: red;}

@@ -1,0 +1,123 @@
+html,body{height: 100%;}
+
+body {
+    background-color: #fff4e2;
+}
+
+div#app {
+    top: 50%;
+}
+
+.box-button {
+    display: inline-block;
+}
+
+.navbar{
+    background-color: #146eff;
+}
+
+.navbar .navbar-brand{
+    color: white;
+    font-weight: bold;
+}
+
+.navbar .navbar-nav > li > a{
+    color:white;
+}
+
+.form-control-label{
+    color: white;
+    font-weight: bold;
+    font-size: large;
+}
+
+li:hover{
+    background-color: #146eff;
+}
+a:hover{
+    background-color: #146efe;
+}
+.dropdown:hover .dropdown-toggle:focus{
+     background-color: #1c73ff;
+ }
+
+.dropdown-menu a .dropdown-menu{
+    position: absolute;
+    background-color: #1c73ff;
+    min-width: 160px;
+    z-index: 1;
+}
+
+td, th {
+    text-align: center;
+}
+
+#errmsg,#errmsgqty,#errmsghrg,#errmsgmaks,#errmsg2{ color: red;}
+
+.card-body {
+    background-color: #0080ff;
+}
+
+table {
+    font-size: 90%;
+}
+
+.paging {
+    float: right;
+    text-align: right;
+}
+
+.paging ul.pager, .paging ul.pagination {
+    text-align: right;
+}
+
+ul.pagination, ul.pager {
+    margin-top: 0px;
+}
+
+div.sticky {
+  position: -webkit-sticky;
+  position: sticky;
+    background-color: #fff4e2;
+    padding-top: 5px;
+    top: 56px;
+}
+div.center {
+    position: absolute;
+    top: 30%;
+    right: 15%;
+    color: white;
+}
+
+#postTable {
+    background-color: white;
+    vertical-align: baseline;
+    
+}
+
+#postTable th {
+    border: 1px solid #aaaaaa;
+}
+
+#postTable td {
+    text-align: left;
+    border: 1px solid #aaaaaa;
+}
+
+@media screen and (max-width: 1024px) {
+    div.center {
+        position: static;
+        top: 0px;
+        right: 0px;
+    color: white;
+}
+    div.sticky {
+        height: 100%;
+    }
+}
+
+.modal-body {
+    background-color: #0080ff;
+}
+
+.ui-autocomplete { position: absolute; cursor: default;z-index:2134567897 !important;} 
