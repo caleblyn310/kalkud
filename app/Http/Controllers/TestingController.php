@@ -15,6 +15,9 @@ use App\Siswa;
 use App\Customuser;
 use App\Inventory;
 use App\Kaskecil;
+use App\Invoices;
+use App\InvoicesDetail;
+use App\JurnalAdmin;
 use Excel;
 use Input;
 use DB;
@@ -22,6 +25,7 @@ use Response;
 use DateTime;
 use Log;
 use Mail;
+use Terbilang;
 use App\Jobs\SendWelcomeEmail;
 //use Bca;
 
@@ -37,6 +41,9 @@ class TestingController extends Controller
 
     public function index()
     {
+        $inv = Invoices::findOrFail(30);
+        $expmemo = explode("\r\n", $inv->memo);
+        //dd(count(explode("\r\n", $inv->memo)));
         /*$apa = Testing::all();
         for ($i=0;$i<$apa->count();$i++)
             $apaja[$apa[$i]['table_coba_id']] = $apa[$i]['Nama'];
@@ -54,8 +61,8 @@ class TestingController extends Controller
         echo json_encode($response);
         // LIHAT HASIL OUTPUT
         dd($response);*/
-        $response = \Bca::httpAuth();
-        dd($response);
+        //$response = \Bca::httpAuth();
+        //dd($response);
         $temp = Inventory::findOrFail(3);
         //$temp = new DateTime($temp->tanggal_beli->format('Y-m'));
         $temp = new DateTime("2017-12-30");
@@ -75,7 +82,7 @@ class TestingController extends Controller
                 $substr = substr($substr, 0, $y);
                 $result = $result . $substr . "|";
         } 
-        dd($result.$ts);
+        //dd($result.$ts);
         return view('testing');
     }
 
@@ -86,11 +93,77 @@ class TestingController extends Controller
 
     public function store(Request $request)
     {
-        //ob_end_clean();
-        //ob_start();
-
+        ob_end_clean();
+        ob_start();
+        
         if($request->hasFile('file_exc')) {
-            $path = $request->file_exc->path();
+            $path = $request->file_exc->getRealPath();
+            Excel::load($path, function ($reader) {
+                $results = $reader->get()->toArray();
+                dd($results);
+
+                //multiple sheet
+                for ($i=0; $i < count($results); $i++) { 
+                    for ($y=0; $y < count($results[$i]); $y++) { 
+                        $ja = new JurnalAdmin();
+                        $ja->No_account = $results[$i][$y]['kode_coa'];
+                        $ja->No_bukti = $results[$i][$y]['slip_no'];
+                        $ja->Tanggal = $results[$i][$y]['tanggal'];
+                        $ja->Uraian = $results[$i][$y]['uraian'];
+                        $ja->Debet = $results[$i][$y]['debit'];
+                        $ja->Kredit = $results[$i][$y]['kredit'];
+                        $ja->Kontra_acc = $results[$i][$y]['kontra_acc'];
+                        $ja->save();
+                    }
+                }
+                //one sheet
+                /*for ($i=0; $i < count($results); $i++) { 
+                    $ja = new JurnalAdmin();
+                    $ja->No_account = $results[$i]['kode_coa'];
+                    $ja->No_bukti = $results[$i]['slip_no'];
+                    $ja->Tanggal = $results[$i]['tanggal'];
+                    $ja->Uraian = $results[$i]['uraian'];
+                    $ja->Debet = $results[$i]['debit'];
+                    $ja->Kredit = $results[$i]['kredit'];
+                    $ja->Kontra_acc = $results[$i]['kontra_acc'];
+                    $ja->save();
+                }*/
+            });
+        }
+
+        //input file excel invoices to database
+        /*if($request->hasFile('file_exc')) {
+            $path = $request->file_exc->getRealPath();
+            //dd($path);
+            Excel::selectSheets('Des 18')->load($path, function ($reader) {
+                $results = $reader->get()->toArray();
+                //dd($results);
+                $totalnominal = 0;
+
+                for($i = 0;$i<count($results);$i++) {
+                    $invdet = new InvoicesDetail();
+                    $invdet->kode_d_ger = $results[$i]['coa'];
+                    $invdet->invoices_no = $results[$i]['bpb'];
+                    $invdet->description = $results[$i]['keterangan'];
+                    $invdet->nominal = $results[$i]['nominal'];
+                    $invdet->save();$totalnominal += $results[$i]['nominal'];
+
+                    if(($i+1) == count($results) || $results[$i]['bpb'] != $results[$i+1]['bpb']) {
+                        $inv = new Invoices();
+                        $inv->invoices_no = $results[$i]['bpb'];
+                        $inv->bank = $results[$i]['bank'];
+                        $inv->pay_to = $results[$i]['pay_to'];
+                        $inv->give_to = $results[$i]['submit_to'];
+                        $inv->dot = $results[$i]['tanggal'];
+                        $inv->nominal = $totalnominal;
+                        $inv->user_id = 19;
+                        $inv->aiw = Terbilang::make($totalnominal);
+                        $inv->save();
+                        $totalnominal = 0;
+                    }
+                }
+            });
+        }*/
             
             /*Excel::load($path . '/exported.xls', function($reader) 
             {
@@ -100,7 +173,7 @@ class TestingController extends Controller
                          'test1', 'test2',
                      ]);
                 });
-            })->export('xls');*/
+            })->export('xls');
 
             Excel::load($path, function ($reader) {
                 $reader->sheet('Sheet1', function ($sheet) { 
@@ -108,7 +181,7 @@ class TestingController extends Controller
                     //dd($sheet);
                 });
             })->export('xls');
-        }
+        }*/
 
             /*fclose($data);
             $dtex[] = array('','Total Penerimaan',$totalkredit);

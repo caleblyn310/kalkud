@@ -23,7 +23,7 @@ class ChequeController extends Controller
     public function index()
     {
         if(Auth::user()->kode_unit == 100) {
-            $check_list = Cheque::where([['mode','!=','print'],['id','>',10]])->orderBy('tanggal_cair','desc')->paginate(15);
+            $check_list = Cheque::where([['mode','!=','print'],['id','>',10]])->orderBy('tanggal_cair','desc')->get();
             return view('check.index',compact('check_list'));
         }
         else {
@@ -44,7 +44,7 @@ class ChequeController extends Controller
             $query->select('datacheck.data_reimburse')->from('datacheck')->where('kode_unit',Auth::user()->kode_unit);
         })->where([['kode_unit',Auth::user()->kode_unit],['mode','print']])->get();*/
         if($tempf->count() > 0)
-        return view('check.create',compact('tempf'));
+            return view('check.create',compact('tempf'));
         else
         {
             Session::flash('flash_message','Tidak ada data reimbursement yang siap untuk diinput');

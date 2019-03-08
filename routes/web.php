@@ -21,6 +21,7 @@ Route::get('imp','TestingController@importFileIntoDB');
 Route::get('send','TestingController@send');
 Route::get('convertbca','AccountingController@convertBCA');
 Route::post('convertbca','MakeExcelController@convertBCA');
+Route::get('ambildata','TestinganController@krtUjian');
 
 Route::get('mpdf','AccountingController@mPDFGen');
 
@@ -44,6 +45,8 @@ Route::get('ja/edit', 'JurnalController@edittransaction');
 Route::get('search/transaction', 'JurnalController@search');
 
 Route::get('reqreimburse/{mode}','KaskecilController@requestreimburse');
+
+Route::get('getreimburse','DatareimController@funcsdr');
 
 Route::get('inventory/genDep','InventoryController@genDepreciation');
 
@@ -77,7 +80,11 @@ Route::resource('invoicesdetail','InvoicesDetailController');
 
 Route::resource('main','MainController');
 
+Route::resource('reg','RegistrationController');
+
 Route::get('invoicecancel/{invno}','InvoicesController@cancel');
+
+Route::get('checkInvNo/{invno}','InvoicesController@checkInvNo');
 
 Route::get('cheque/{userid}/cancel','ChequeController@cancel');
 

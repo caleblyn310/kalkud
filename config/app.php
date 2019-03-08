@@ -175,6 +175,7 @@ return [
         SimpleSoftwareIO\QrCode\QrCodeServiceProvider::class,
         niklasravnsborg\LaravelPdf\PdfServiceProvider::class,
         Odenktools\Bca\BcaServiceProvider::class,
+        Riskihajar\Terbilang\TerbilangServiceProvider::class,
 
         /*
          * Application Service Providers...
@@ -243,6 +244,7 @@ return [
         'QrCode' => SimpleSoftwareIO\QrCode\Facades\QrCode::class,
         'PDF' => niklasravnsborg\LaravelPdf\Facades\Pdf::class,
         'Bca'  => Odenktools\Bca\Facades\Bca::class,
+        'Terbilang' => Riskihajar\Terbilang\Facades\Terbilang::class,
     ],
 
 ];

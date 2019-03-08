@@ -2,14 +2,12 @@
 
 @section('content')
 <div class="container table-responsive">@include('_partial.flash_message')
-    <div class="row" style="padding-top: 15px;">
-    <h5 class="float-left col-lg-6">Invoices List</h5>
-    <div class="col-lg-6 float-right tomb">
-        <a href="invoices/create" class="btn btn-sm btn-primary float-right">NEW</a>
+    <div class="tomb">
+        <a href="invoices/create" class="btn btn-sm btn-primary float-right">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;ADD&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</a>
     </div>
-    </div><br>
     @if (!empty($invoices_list))
         <table class="table table-striped table-bordered table-hover table-condensed table-sm">
+            <caption style="caption-side: top;color: #171717;"><strong>Invoices List</strong></caption>
             <thead><tr>
                 <th>Date</th><th>Invoices No</th><th>To</th><th>Nominal</th><th style="width: 115px;">Action</th>
             </tr></thead>
@@ -86,7 +84,9 @@
             cache: false,
             dataType: "text",
             success: function(data, textStatus, jq) {
-                webprint.printRaw(data, 'lx300');
+                var i;
+                for(i = 0;i<2;i++)
+                webprint.printRaw(data, 'L310');
                 toastr.success('Successfully printed!', 'Success Alert', {timeOut: 2500});
                 location.reload();
             }

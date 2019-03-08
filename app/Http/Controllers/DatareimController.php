@@ -9,6 +9,7 @@ use App\Kaskecil;
 use Illuminate\Validation\Rule;
 use Validator;
 use Session;
+use Response;
 
 use Illuminate\Support\Facades\Auth;
 
@@ -34,7 +35,7 @@ class DatareimController extends Controller
             //$kaskecil_list = DB::select(DB::raw("select * from $namafile order by no_bukti, tanggal_trans, id"))->paginate(10);
             $kaskecil_list = DB::table($namafile)->get();
             $totalreim = $kaskecil_list->sum('nominal');
-            $kaskecil_list = DB::table($namafile)->orderBy('no_bukti')->orderBy('tanggal_trans')->orderBy('id')->paginate(10);
+            $kaskecil_list = DB::table($namafile)->orderBy('no_bukti')->orderBy('tanggal_trans')->orderBy('id')->get();
             DB::table('simpanfile')->where('namafile','LIKE',$namafile.'%')->update(['mode'=>'edit']);
             return view('datareim.datareimedit',compact('kaskecil_list','namafile','totalreim'));
         }
@@ -76,10 +77,12 @@ class DatareimController extends Controller
         return redirect('datareim/'.$request->nv.'/edit');
     }
 
-    private function funcsdr()
+    public function funcsdr()
     {
-        $tempf = DB::table('simpanfile')->where('kode_unit',Auth::user()->kode_unit)
-            ->whereNotIn('mode',['final','cheque'])->orderBy('created_at','desc')->get();
-        return view('datareim.datareim',compact('tempf'));
+        $reimburse = DB::table('simpanfile')->where('kode_unit',Auth::user()->kode_unit)->whereNotIn('mode',['final','cheque'])->get();
+        //dd(count($reimburse));
+        //(count($reimburse)>0) ? $reimburse = $reimburse[0]->namafile . '|' . $reimburse[0]->mode : $reimburse = '' ;
+        return Response::json($reimburse)->withCallback();
+        //return view('datareim.datareim',compact('tempf'));
     }
 }

@@ -8,7 +8,7 @@
     {!! Form::label('tanggal_trans','Tanggal BPU',['class'=>'col-lg-3 form-control-label']) !!}
     <div class="col-lg-8">
         {!! Form::date('tanggal_trans',!empty($kaskecil) ? $kaskecil->tanggal_trans->format('Y-m-d') : date('Y-m-d')
-        ,['class'=>'form-control','required'=>'']) !!}&nbsp;
+        ,['class'=>'form-control form-control-sm','required'=>'']) !!}&nbsp;
     @if($errors->has('tanggal_trans'))<span >{{ $errors->first('tanggal_trans') }}</span>@endif</div>
 </div>
 
@@ -19,9 +19,9 @@
 @endif
     {!! Form::label('kode_d_ger','Kode D-Ger',['class'=>'col-sm-3 form-control-label']) !!}
     <div class="col-lg-8">
-        {!! Form::text('q', '', ['class'=>'form-control','id' =>  'q', 'placeholder' =>  'Cari kode d-ger',
+        {!! Form::text('q', '', ['class'=>'form-control form-control-sm','id' =>  'q', 'placeholder' =>  'Cari kode d-ger',
         'autofocus'=>'']) !!}
-        {!! Form::text('kode_d_ger',null,['class'=>'form-control','placeholder'=>'KODE D-Ger',
+        {!! Form::text('kode_d_ger',null,['class'=>'form-control form-control-sm','placeholder'=>'KODE D-Ger',
         'required'=>'','maxlength'=>'10','pattern'=>'\d{3}(.)\d{2}(.)\d{3}','readonly'=>'']) !!}
     
         @if ($errors->has('kode_d_ger'))
@@ -31,14 +31,14 @@
 <div class="form-group row">
     {!! Form::label('subkode','Sub Kode',['class'=>'col-sm-3 form-control-label']) !!}
     <div class="col-lg-8">
-        {!! Form::text('subkode',null,['class'=>'form-control','placeholder'=>'Sub KODE','maxlength'=>'2']) !!}
+        {!! Form::text('subkode',null,['class'=>'form-control form-control-sm','placeholder'=>'Sub KODE','maxlength'=>'2']) !!}
     </div>
 </div>
 
 <div class="form-group row">
     {!! Form::label('no_bukti','No BPU',['class'=>'col-sm-3 form-control-label']) !!}
     <div class="col-lg-8">
-    {!! Form::text('no_bukti',null,['class'=>'form-control','placeholder'=>'Awali dengan KA atau KK','required'=>'',
+    {!! Form::text('no_bukti',null,['class'=>'form-control form-control-sm','placeholder'=>'Awali dengan KA atau KK','required'=>'',
     'maxlength'=>'10','pattern'=>'K(A|K|B)\d{5,}']) !!}
     </div>
 </div>
@@ -46,7 +46,7 @@
 <div class="form-group row">
     {!! Form::label('deskripsi','Deskripsi',['class'=>'col-sm-3 form-control-label']) !!}
     <div class="col-lg-8">
-        {!! Form::text('deskripsi',null,['class'=>'form-control','placeholder'=>'Deskripsi','required'=>'']) !!}
+        {!! Form::text('deskripsi',null,['class'=>'form-control form-control-sm','placeholder'=>'Deskripsi','required'=>'']) !!}
     </div>
 </div>
 
@@ -54,7 +54,7 @@
     {!! Form::label('nominal','Nominal',['class'=>'col-sm-3 form-control-label']) !!}
 
     <div class="col-lg-8">
-        {!! Form::text('nominal',null,['class'=>'form-control','placeholder'=>'Nominal',
+        {!! Form::text('nominal',null,['class'=>'form-control form-control-sm','placeholder'=>'Nominal', 'maxlength'=>'8',
         'required'=>'']) !!}&nbsp;<span id="errmsg"></span>
     </div>
 </div>

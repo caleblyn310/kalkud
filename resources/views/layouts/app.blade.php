@@ -17,19 +17,6 @@
     <link href="{{ asset('fa47/css/font-awesome.min.css')}}" rel="stylesheet">
     <link href="{{ asset('css/custom.css') }}" rel="stylesheet">
     @yield('css')
-    <style type="text/css">
-        #loader {
-          display: none;
-          position: fixed;
-          top: 0;
-          left: 0;
-          right: 0;
-          bottom: 0;
-          width: 100%;
-          background: rgba(0,0,0,0.75) url(../loading-bar_4.gif) no-repeat center center;
-          z-index: 10000;
-        }
-    </style>
     <script>var buff;</script>
 </head>
 <body>

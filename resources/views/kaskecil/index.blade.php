@@ -1,27 +1,21 @@
 @extends('layouts/app')
 
 @section('content')
+    @include('_partial.flash_message')
     <div class="container table-responsive">
-        <div class="row" style="padding-top: 25px;">
-        <h5 class="float-left col">Daftar Kas Kecil yang Belum Di-Upload</h5>
-        <h5 class="col" style="text-align: right;">Plafon: Rp. {{ number_format($plafon,0,'','.') }},00</h5></div>
-        @include('_partial.flash_message')
-        <hr>
         <div class="row">
-            <div class="col-6 tomb" style=" height: 33px;">
-                <a href="create" class="btn btn-sm btn-primary">Tambah</a>
+            <div class="tomb text-right btn-group-vertical" style="width: 80px; height: auto;">
+                <a href="kaskecil/create" class="btn btn-sm btn-info btn-block">ADD</a>
                 @if($kaskecil_list->count() > 0)
-                    <a href="mpdf/req" class="btn btn-sm btn-danger" onclick="return confirm('Sudah yakin mau reimburse??')">Request Reimburse</a>
+                    <a href="mpdf/req" class="btn btn-sm btn-danger btn-block" onclick="return confirm('Sudah yakin mau reimburse??')">REQUEST</a>
                 @endif
             </div>
-                <div class="col-6 float-right">
-                <h6 style="text-align: right; padding-top: 7px; height: 33px;">
-                Total Reimburst: {{ number_format($totalreim,0,"",".") }} | Sisa Saldo: {{ number_format($plafon-$totalreim,0,"",".") }}</h6>
-            </div></div>
+                
         @if (!empty($kaskecil_list))
-            <table class="table table-striped table-bordered table-hover table-condensed table-sm">
+            <table class="table table-striped table-bordered table-hover table-condensed table-sm" id="tblKaskcl">
+                <caption style="caption-side: top;color: #171717;">Daftar kas kecil yang belum di upload <strong>(Plafon: Rp. {{ number_format($plafon,0,'','.') }},00 - Total Reimburse: <u>{{ number_format($totalreim,0,"",".") }}</u> | Sisa Saldo: <u>{{ number_format($plafon-$totalreim,0,"",".") }}</u>)</strong></caption>
                 <thead><tr>
-                    <th>Tanggal</th><th>Kode D-Ger</th><th>Sub<br>Kode</th><th>No BPU</th><th>Deskripsi</th><th>Nominal</th><th style="width: 77px;">Action</th>
+                    <th>Tanggal</th><th>Kode D-Ger</th><th>Sub<br>Kode</th><th>No BPU</th><th style="width: 62%;">Deskripsi</th><th>Nominal</th><th style="width: 77px;">Action</th>
                 </tr></thead>
                 <tbody>
                 <?php $total = 0 ?>
@@ -45,10 +39,26 @@
                 <tr><td colspan="7">
                     {!! $kaskecil_list->links('vendor.pagination.bootstrap-4') !!}
                 </td></tr>
+                <?php (count($totalcoa) > count($totalsk)) ? $totalrow=count($totalcoa) : $totalrow=count($totalsk); 
+                if(count($totalsk)>0) $totalsk[0]->subkode = 'Kas Kecil'; ?>
+                <tr><td colspan="4" style="text-align:right;">Total Nominal Per Sub Kode</td>
+                    <td colspan="3" style="text-align:right;">Total Nominal Per COA</td></tr>
+                <?php for ($i=0; $i < $totalrow; $i++) : ?>
+                    <tr>
+                    @if(count($totalsk)>$i)
+                        <td colspan="2" style="text-align:right;">{{ $totalsk[$i]->subkode }}</td>
+                        <td colspan="2" style="text-align:right">{{number_format($totalsk[$i]->total,0,'','.')}}</td>
+                    @else <td colspan="4"></td> @endif
+                    @if(count($totalcoa)>$i)
+                        <td style="text-align:right;" colspan="2">{{$totalcoa[$i]->kode_d_ger}}</td>
+                        <td style="text-align:right;">{{number_format($totalcoa[$i]->total,0,'','.')}}</td>
+                    @else <td colspan="3"></td> @endif
+                    </tr>
+                <?php endfor ?>
                 </tbody>
             </table>
         @else
             <p>Tidak ada data kas kecil yang belum di upload</p>
-        @endif            
+        @endif
     </div>
-@stop
+@endsection

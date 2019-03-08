@@ -124,7 +124,79 @@ $(document).ready(function () {
         }
     });
 
-    $('div.alert').not('.alert-important').delay(3000).slideUp(300);
+    $('div.alert').not('.alert-important').delay(2500).slideUp(200);
+
+    //MenuCheque
+    $('#mnCheque').click(function () {
+        spinner.show();
+    })
+    //End
+
+    //Untuk tombol Reimburse
+    $('#printRM').click(function () {
+        var md = ''; var fn = '';
+        var host = window.location.hostname; var temp = '';
+        if (!host.includes('localhost')) {temp = '/kaskecil';}
+        $.ajax({
+            type: 'GET',
+            url: temp + '/getreimburse',
+            cache: false,
+            success: function (resp) {
+                fn = resp[0].namafile;
+                md = resp[0].mode;
+
+                if (md == 'print') {
+                if(host.includes('localhost'))
+                    window.open('/storage/' + fn);
+                else
+                    window.open('/kaskecil/storage/' + fn);
+                }
+                else {
+                    alert('Reimburse yang berjalan dalam mode EDIT.\nSilakan menyelesaikan proses EDIT terlebih dahulu.');
+                }
+            }
+        });
+        
+        
+    });
+
+    $('#editRM').click(function () {
+        var ans = true; var md = ''; var fn = '';
+        var host = window.location.hostname; var temp = '';
+        if (!host.includes('localhost')) {temp = '/kaskecil';}
+        $.ajax({
+            type: 'GET',
+            url: temp + '/getreimburse',
+            cache: false,
+            success: function (data) {
+                fn = data[0].namafile;
+                md = data[0].mode;
+
+                if (md == 'print') {
+                    ans = confirm('Apakah Anda yakin hendak melakukan EDIT?');
+                }
+
+                if (ans) {
+                    if(host.includes('localhost')) 
+                        window.open('/datareim/' + fn.slice(0,19).trim() + '/edit','_self');
+                    else
+                        window.open('/kaskecil/datareim/' + fn.slice(0,19).trim() + '/edit', '_self');
+                }
+            }
+        });
+
+        
+    });
+    //Berakhir disini
+
+    //Dropdown Login
+    $('#inputs input').click(function(e) {
+        $('#login-content').css('display','block');
+    });
+    $('#inputs input').focusout(function(e) {
+        $('#login-content').css('display','none');
+    });
+    //Berakhir disini
 
     //Check 
 

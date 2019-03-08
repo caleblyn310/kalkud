@@ -4,10 +4,9 @@
     <div class="container">
         <div class="col-md-6 mx-auto" style="padding-top: 25px;">
                 <div class="card">
-                    <div class="card-header"><h2>Edit Kas Kecil</h2></div>
-                    <div class="card-body">
+                    <div class="card-body"><h6>Edit Kas Kecil</h6><hr>
                     {!! Form::model($kaskecil,['method'=>'PATCH', 'action'=>['KaskecilController@update',$kaskecil->id]]) !!}
-                    <br>@include('kaskecil.form')
+                    @include('kaskecil.form')
                     {!! Form::close() !!}
                     </div>
             </div>

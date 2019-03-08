@@ -19,10 +19,26 @@
 						    <p style="color:  white;">Pilih opsi Laporan di halaman download Laporan VA BCA</p>
 						    <p style="color:  white;">File txt-nya yang ada tulisan "rpt"</p>
 						{!! Form::close() !!}
+						<a href="/ambildata" class="btn btn-sm btn-info" id="ngasal" target="_blank">Ngasal</a>
                 </div>
             </div>
             </div>
         </div>
     </div>
 
+@endsection
+
+@section('scripts')
+<script type="text/javascript">
+	// $('#ngasal').click(function (e) {
+	// 	$.ajax({
+ //            type: 'GET',
+ //            url: '/ambildata',
+ //            cache: false,
+ //            success: function (resp) {
+ //                alert('FINISH');
+ //            }
+ //        });
+	// });
+</script>
 @endsection

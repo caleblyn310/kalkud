@@ -37,7 +37,16 @@ class KaskecilController extends Controller
         $kaskecil_list = $kaskecil_list->paginate(15);
         
         $plafon = DB::table('kodeunit')->where('id', Auth::user()->kode_unit)->value('plafon');
-        return view('kaskecil.index', compact('kaskecil_list', 'plafon', 'totalreim'));
+
+        $reimburse = DB::table('simpanfile')->where('kode_unit',Auth::user()->kode_unit)->whereNotIn('mode',['final','cheque'])->get();
+        //dd(count($reimburse));
+        (count($reimburse)>0) ? $reimburse = $reimburse[0]->namafile . '|' . $reimburse[0]->mode : $reimburse = '' ;
+        $totalcoa = Kaskecil::select(DB::raw('kode_d_ger, SUM(nominal) as total'))
+            ->where([['status','bu'],['kode_unit',Auth::user()->kode_unit]])->groupBy('kode_d_ger')->get();
+
+        $totalsk = Kaskecil::select(DB::raw('subkode, SUM(nominal) as total'))
+            ->where([['status','bu'],['kode_unit',Auth::user()->kode_unit]])->groupBy('subkode')->get();
+        return view('kaskecil.index', compact('kaskecil_list', 'plafon', 'totalreim','reimburse','totalcoa','totalsk'));
         /*}
         else if(Auth::user()->kode_unit == 100) {
             $check_list = Cheque::where([['mode','!=','print'],['id','>',10]])->orderBy('tanggal_cair','desc')->get();
@@ -181,7 +190,7 @@ class KaskecilController extends Controller
             $rev = ' - Revisi';//$jl = 'Rekap Reimburse';
         }
         else {
-            $tempd = DB::select('select * from datacheck where id = ?',[$mode]);
+            $tempd = DB::connection('mysql3')->select('select * from datacheck where id = ?',[$mode]);
             foreach ($tempd as $t) {
                 $mode = substr($t->data_reimburse,0,-4);
                 $items = DB::select(DB::raw("select * from $mode ORDER BY kode_d_ger, tanggal_trans, no_bukti, id"));
@@ -364,7 +373,7 @@ class KaskecilController extends Controller
             Session::flash('flash_message','Request berhasil disimpan.');
             //return $pdf->stream($tf);
             $pdf->save('storage/'.$tf);
-            return redirect('datareim');}
+            return redirect('kaskecil');}
         else {
             $dr = str_replace('laporan','',$mode);
             $tf = str_replace('reimburse', '',$mode);

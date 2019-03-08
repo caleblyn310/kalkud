@@ -26,9 +26,15 @@
             cache: false,
             dataType: "text",
             success: function(data, textStatus, jq) {
-                webprint.printRaw(data, 'lx300');
-                toastr.success('Successfully printed!', 'Success Alert', {timeOut: 2500});
-                window.location.href = "http://kaskecil.app/invoices";
+                var i = 0;
+                for(i = 0; i < 3; i++){
+                    webprint.printRaw(data, 'l310');
+                    toastr.success('Successfully printed!', 'Success Alert', {timeOut: 2500});
+                    setTimeout(function () {
+                       window.location.href = "http://"+location.hostname ;
+                    }, 3000);
+                }
+                //window.location.href = "http://"+location.hostname+"/invoices";
             }
         });
     });

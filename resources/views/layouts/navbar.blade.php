@@ -20,8 +20,16 @@
             <ul class="nav navbar-nav">
                 @if(Auth::check() && Auth::user()->kode_unit < 50) &#xA0;
                 @if(Auth::user()->id != 19)
-                <li class="nav-item"><a href="{{ url('cheque') }}" class="nav-link">Check</a></li>
-                <li class="nav-item"><a href="{{ url('datareim') }}" class="nav-link">Reimburse</a></li>
+                <li class="nav-item"><a href="{{ url('cheque') }}" class="nav-link" id="mnCheque">Cheque</a></li>
+                <li class="dropdown nav-item" id="mnRM"><a href="#" class="dropdown-toggle nav-link" data-toggle="dropdown">Reimburse<span class="caret"></span></a>
+                    <ul class="dropdown-menu">
+                        <li class="dropdown-item">
+                        <a href="#" id="printRM">Print</a></li>
+                        <li class="dropdown-item">
+                        <a href="#" id="editRM">Edit</a></li>
+                    </ul>
+                </li>
+
                 <li class="nav-item"><a href="{{ url('convertbca') }}" class="nav-link">Convert BCA</a></li>
                 @endif
                 @if(Auth::user()->kode_unit == 0 )
@@ -43,6 +51,7 @@
                 <li class="dropdown nav-item"><a href="#" class="nav-link" id="recalculate">Recalculate</a></li>
                 <li class="dropdown nav-item"><a href="{{ url('getSAA') }}" class="nav-link" id="recalculate">SAA</a></li>
                 <li class="dropdown nav-item"><a href="{{ url('boa') }}" class="nav-link" id="recalculate">BoA</a></li>
+                <li class="dropdown nav-item"><a href="{{ url('downloadbpb') }}" class="nav-link" id="dlBPB">Download BPB</a></li>
                 @endif
             </ul>
             <!-- Right Side Of Navbar -->

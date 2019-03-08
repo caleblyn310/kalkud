@@ -17,6 +17,7 @@
         "milon/barcode": "^5.3",
         "niklasravnsborg/laravel-pdf": "^2.0.3",
         "odenktools/laravel-bca": "^2.0",
+        "riskihajar/terbilang": "^1.2",
         "simplesoftwareio/simple-qrcode": "^1.5"
     },
     "require-dev": {

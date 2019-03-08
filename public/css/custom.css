@@ -1,7 +1,7 @@
 html,body{height: 100%;}
 
 body {
-    background-color: #fff4e2;
+    background-color: #9EF4C8;
 }
 
 div#app {
@@ -13,7 +13,7 @@ div#app {
 }
 
 .navbar{
-    background-color: #146eff;
+    background-color: #026670;
 }
 
 .navbar .navbar-brand{
@@ -26,26 +26,47 @@ div#app {
 }
 
 .form-control-label{
-    color: white;
-    font-weight: bold;
-    font-size: large;
+    
+    color: #2d2d2d;
+    font-size: 95%;
 }
 
 li:hover{
-    background-color: #146eff;
+    background-color: #026670;
 }
 a:hover{
-    background-color: #146efe;
+    background-color: transparent;
 }
-.dropdown:hover .dropdown-toggle:focus{
-     background-color: #1c73ff;
+
+.dropdown {
+    position: relative;
+    min-width: 110px;
+    border: none;
+    margin: 0px;
+}
+
+.dropdown:hover {
+     background-color: #015159;
  }
 
-.dropdown-menu a .dropdown-menu{
-    position: absolute;
-    background-color: #1c73ff;
-    min-width: 160px;
-    z-index: 1;
+.dropdown-menu {
+    background-color: #fbfff1 !important;
+    position: absolute ;
+    min-width: 110px ;
+}
+
+.dropdown:hover .dropdown-menu {
+    display: block !important;
+}
+
+.dropdown-item, .dropdown-item a {
+    background-color: transparent !important;
+    text-decoration: none;
+    display: block;
+}
+
+.dropdown-item a:active {
+    background-color: transparent !important;
 }
 
 td, th {
@@ -54,12 +75,14 @@ td, th {
 
 #errmsg,#errmsgqty,#errmsghrg,#errmsgmaks,#errmsg2{ color: red;}
 
-.card-body {
-    background-color: #0080ff;
+.card-body, .card-header {
+    background-color: #fbfff1;
+    box-shadow: 0px 0px 20px 0px #026670;
 }
 
-table {
+table,td,th {
     font-size: 90%;
+    background-color: #fbfff1;
 }
 
 .paging {
@@ -104,6 +127,10 @@ div.center {
     border: 1px solid #aaaaaa;
 }
 
+#memo {
+    resize: none;
+}
+
 @media screen and (max-width: 1024px) {
     div.center {
         position: static;
@@ -117,7 +144,80 @@ div.center {
 }
 
 .modal-body {
-    background-color: #0080ff;
+    background-color: #9EF4C8;
 }
 
-.ui-autocomplete { position: absolute; cursor: default;z-index:2134567897 !important;} 
+.modal-content {
+  border-radius: 0px;
+}
+
+.ui-autocomplete { position: absolute; cursor: default;z-index:2134567897 !important;}
+
+#flashmsg {
+    position: absolute;
+    top: 15px;
+    right: 10px;
+    z-index: 987654321;
+}
+
+.tomb {
+    position: fixed;
+  right: 15px;
+  top: 100px;
+  width: 100px;
+  height: 100px;
+  
+  margin-right: 0px;
+}
+
+#tblKaskcl {
+    color: #171717;    
+}
+
+.table-bordered td,th {
+   border: 1px solid lightgray !important;
+}
+
+#loader {
+          display: none;
+          position: fixed;
+          top: 0;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          width: 100%;
+          background: rgba(0,0,0,0.75) url(../loading-bar_4.gif) no-repeat center center;
+          z-index: 10000;
+        }
+
+.dropdown-menu {
+    border: none;
+    margin-top: 0px;
+    border-radius: 0px;
+}
+
+.btn, .form-control {
+    border-radius: 0px;
+}
+
+#login-content {
+  display: none;
+  position: absolute;
+  width: 210px;
+  right: 0;
+  z-index: 999;    
+  background: #fff;
+  background-image: linear-gradient(top, #fff, #eee);  
+  padding: 15px;
+  box-shadow: 0 2px 2px -1px rgba(0,0,0,.9);
+  border-radius: 0px;
+}
+
+#inputs input {
+  background: #f1f1f1;
+  padding: 6px 5px;
+  margin: 0 0 5px 0;
+  border-radius: 0px;
+  box-shadow: 0 1px 1px #ccc inset;
+}
+

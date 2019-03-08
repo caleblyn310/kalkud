@@ -93,10 +93,13 @@ class MakeExcelController extends Controller
 
     public function downloadbpb()
     {
+        ob_end_clean();
+        ob_start();
         $temp = DB::table('invoices')
                     ->join('invoices_detail','invoices.invoices_no','=', 'invoices_detail.invoices_no')
-                    ->select('invoices.dot','invoices_detail.invoices_no','invoices_detail.description','invoices_detail.nominal')
+                    ->select('invoices.dot','invoices.bank','invoices_detail.invoices_no','invoices_detail.description','invoices_detail.nominal','invoices_detail.kode_d_ger')
                     ->where('status','p')->get();
+        //dd($temp);
 
         if(count($temp) > 0) {
         $datas = [];$nomor = 1;$invno = 0;
@@ -106,12 +109,13 @@ class MakeExcelController extends Controller
             else { $nomor++; }
 
             $datas[] = array(
-                'Kode COA' => '',
-                'Slip No' => $nomor.'/'.$t->invoices_no.'/BDIUM-'.Carbon::parse($t->dot)->format('m/y'),
+                'Kode COA' => $t->kode_d_ger,
+                //'Slip No' => $nomor.'/'.$t->invoices_no.'/BDIUM-'.Carbon::parse($t->dot)->format('m/y'),
+                'Slip No' => $t->invoices_no,
                 'Tanggal' => Carbon::parse($t->dot)->format('Y-m-d'),
                 'Uraian' => $t->description,
-                'Debit' => 0,
-                'Kredit' => $t->nominal,
+                'Debit' => $t->nominal,
+                'Kredit' => 0,
                 'Kontra_acc' => '',
             );
         }
@@ -122,7 +126,7 @@ class MakeExcelController extends Controller
             {
                 $sheet->fromArray($datas,null,'A1',true);
             });
-        })->download('csv');
+        })->export('xls');
         }
 
         else { Session::flash('flash_message','Semua data sudah diimpor ke database d-ger'); return redirect('kaskecil'); }

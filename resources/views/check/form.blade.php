@@ -4,8 +4,8 @@
     <div class="form-group row">
 @endif
     {!! Form::label('tanggal_cair','Tanggal Cair',['class'=>'col-sm-3 form-control-label']) !!}
-    <div class="col-sm-5">
-        {!! Form::text('tanggal_cair',!empty($cheque) ? $cheque->tanggal_cair->format('Y-m-d') : date('Y-m-d'),['class'=>'form-control','placeholder'=>'Tanggal Cair Cheque',
+    <div class="col-md-8">
+        {!! Form::text('tanggal_cair',!empty($cheque) ? $cheque->tanggal_cair->format('Y-m-d') : date('Y-m-d'),['class'=>'form-control form-control-sm','placeholder'=>'Tanggal Cair Cheque',
         'required'=>'']) !!}
     </div>
         @if ($errors->has('tanggal_cair'))
@@ -18,8 +18,8 @@
     <div class="form-group row">
 @endif
     {!! Form::label('no_check','No Cheque',['class'=>'col-sm-3 form-control-label']) !!}
-    <div class="col-sm-5">
-        {!! Form::text('no_check',null,['class'=>'form-control','placeholder'=>'No Cheque',
+    <div class="col-md-8">
+        {!! Form::text('no_check',null,['class'=>'form-control form-control-sm','placeholder'=>'No Cheque',
         'required'=>'']) !!}
     </div>
         @if ($errors->has('no_check'))
@@ -32,17 +32,8 @@
     <div class="form-group row">
 @endif
     {!! Form::label('data_reimburse','Reimburse',['class'=>'col-sm-3 form-control-label']) !!}
-    <div class="col-auto">
-        @if (Auth::user()->kode_unit != 100)
-            <select id="data_reimburse" name="data_reimburse" class="form-control" required="">
-            <option value=""></option>
-            @foreach($tempf as $fl)
-                <option value="{{ $fl->namafile.'|'.$fl->nominal }}">{{ $fl->namafile }}</option>
-            @endforeach
-            </select>
-        @else
-        {!! Form::text('data_reimburse',null,['class'=>'form-control','readonly']) !!}
-        @endif
+    <div class="col-md-8">
+        {!! Form::text('data_reimburse',!empty($cheque) ? $cheque->data_reimburse : $tempf[0]->namafile,['class'=>'form-control form-control-sm','readonly']) !!}
     </div>
     @if ($errors->has('data_reimburse'))
             <span class="help-block">{{ $errors->first('data_reimburse') }}</span>@endif
@@ -50,15 +41,15 @@
 
 <div class="form-group row">
     {!! Form::label('nominal','Nominal',['class'=>'col-sm-3 form-control-label']) !!}
-    <div class="col-sm-5">
-        {!! Form::text('nominal',null,['class'=>'form-control','placeholder'=>'Nominal',
+    <div class="col-md-8">
+        {!! Form::text('nominal',!empty($cheque) ? $cheque->nominal : $tempf[0]->nominal,['class'=>'form-control form-control-sm','placeholder'=>'Nominal',
         'required'=>'','readonly'=>'']) !!}&nbsp;<span id="errmsg"></span>
     </div>
 </div>
 
 <div class="form-group row">
     <div class="col-md-8 col-md-offset-4">
-        <button type="submit" class="btn btn-primary">SAVE</button>
-        <a href="{{ asset('cheque/cancel') }}" class="btn btn-primary" id="chequeCancel">Cancel</a>
+        <button type="submit" class="btn btn-sm btn-info">SAVE</button>
+        <a href="{{ asset('cheque/cancel') }}" class="btn btn-sm btn-danger" id="chequeCancel">Cancel</a>
     </div>
 </div>

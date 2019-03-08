@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Session;
+use Response;
 use Illuminate\Support\Facades\Auth;
 use App;
 use Validator;
@@ -27,7 +28,7 @@ class InvoicesController extends Controller
      */
     public function index()
     {
-        $invoices_list = Invoices::orderBy('invoices_no','desc')->paginate(12);
+        $invoices_list = Invoices::orderBy('invoices_no','desc')->paginate(80);
         return view('invoices.index', compact('invoices_list'));
     }
 
@@ -38,7 +39,7 @@ class InvoicesController extends Controller
      */
     public function create()
     {
-        $t = InvNoTemp::where([['user_id',Auth::user()->id],['status','o']])->get();
+        /*$t = InvNoTemp::where([['user_id',Auth::user()->id],['status','o']])->get();
         $bank_list = Bank::pluck('bank','id');
         $fs = 'new'; //form status
         if(count($t) == 0)
@@ -58,7 +59,9 @@ class InvoicesController extends Controller
             $invoicesdetail_list = InvoicesDetail::where('invoices_no',$invoices_no)->get();
             $total = $invoicesdetail_list->sum('nominal');
             return view('invoices.create',compact('invoices_no','bank_list','invoicesdetail_list','total','fs'));
-        }
+        }*/
+        $bank_list = Bank::pluck('bank','id');$fs = 'new';
+        return view('invoices.create', compact('bank_list','fs'));
     }
 
     /**
@@ -84,9 +87,13 @@ class InvoicesController extends Controller
 
         if ($validator->fails())
         {   
-            return redirect('invoices/create')->withInput()->withErrors($validator); }
+            ($validator->errors()->has('nominals')) ? Session::flash('flash_message',$validator->errors()->first('nominals')) : Session::flash('flash_message',$validator->errors()->first('invoices_no'));
+            //dd($validator->errors()->first('invoices_no'));
+            return redirect('invoices/create')->withInput()->withErrors($validator); 
+            //return response()->json(['errors'=>$validator->errors()->all()]);
+        }
         else
-        {
+        {   
             $inv = new Invoices();
             $inv->invoices_no = $input['invoices_no'];
             $inv->bank = $input['bank'];
@@ -99,7 +106,7 @@ class InvoicesController extends Controller
             $inv->memo = $input['memo'];
             $inv->save();
 
-            DB::table('inv_no_temp')->where('invoices_no',$input['invoices_no'])->update(['status' => 's']);
+            //DB::table('inv_no_temp')->where('invoices_no',$input['invoices_no'])->update(['status' => 's']);
             DB::table('invnolist')->where('invoices_no',$input['invoices_no'])->update(['invoices_no' => $input['invoices_no']+1]);
 
             if($request->submitbutton == 'saveprint') {
@@ -108,7 +115,7 @@ class InvoicesController extends Controller
                 return view('invoices.print',compact('invid'));
             }
 
-            Session::flash('flash_message','Invoices saved');
+            Session::flash('flash_message','Invoice saved');
             return redirect('invoices');
         }
     }
@@ -132,7 +139,12 @@ class InvoicesController extends Controller
      */
     public function edit($id)
     {
-        $invoices = Invoices::findOrFail($id);//dd($invoices);
+        $invoices = Invoices::findOrFail($id);
+        if($invoices->status != 's')
+        {
+            Session::flash('flash_message','Invoice already locked.');
+            return redirect('invoices');
+        }
         $bank_list = Bank::pluck('bank','id');
         $invoices_no = $invoices->invoices_no;
         $invoicesdetail_list = InvoicesDetail::where('invoices_no',$invoices_no)->get();
@@ -164,7 +176,7 @@ class InvoicesController extends Controller
         ]);
 
         if ($validator->fails())
-        {   //dd($validator);
+        {   dd($validator);
             return redirect('invoices/'.$id.'/edit')->withInput()->withErrors($validator); }
         else
         {
@@ -211,8 +223,17 @@ class InvoicesController extends Controller
         return redirect('invoices');
     }
 
+    public function checkInvNo($invno) {
+        $result = Invoices::where('invoices_no',$invno)->get();
+        //dd(count($result));
+        (count($result) == 0) ? $result = 'eligible' : $result = 'ne';
+        return Response::json(['result'=>$result]);
+    }
+
     public function printing($invid)
     {
+        ob_end_clean();
+        ob_start();
         $inv = Invoices::findOrFail($invid);
         $bank = Bank::findOrFail($inv->bank);
         $invdets = InvoicesDetail::where('invoices_no',$inv->invoices_no)->get();
@@ -284,46 +305,94 @@ class InvoicesController extends Controller
         return $dt;*/
 
         //Existing form version
-        $t = 0;
-        $dt = "\n\n\n        " . $bank->bank . "\n\n";
-        $dt .= "                " . $inv->pay_to . "\n\n";
-        $dt .= str_pad("                " . $inv->give_to,58, ' ', STR_PAD_RIGHT);
-        $dt .= "   " . $inv->dot->format('d F Y') . "\n\n\n\n\n";
-        
+        $t = 0;$cpl = 38;
+        $dt = "\n\n\n\n            " . $bank->bank;
+        if($inv->status == 'p' || $inv->status == 'dg') { $dt .= str_pad('reprint',60, ' ', STR_PAD_LEFT); }
+        else { DB::table('invoices')->where('invoices_no',$inv->invoices_no)->update(['status' => 'p']); }
+        $dt .= "\n\n";
+        $dt .= "                  " . $inv->pay_to . "\n";
+        $ts = $inv->give_to;$z = 0;
+        if (strlen($ts) > $cpl){
+            while (strlen($ts) > $cpl) {
+                $substr = str_limit($ts,$cpl,'');
+                $y = strripos($substr,' ');
+                $ts = substr($ts, $y+1);
+                $substr = substr($substr, 0, $y);
+                $dt .= "                  " . str_pad($substr,38, " ", STR_PAD_RIGHT);
+                if ($z == 0) { $dt .= "      " . $inv->dot->format('d F Y'); $z++;}
+                $dt .= "\n";
+            }
+            $dt .= "                  " . $ts . "\n\n\n";
+        }
+        else {
+            $dt .= "                  " . str_pad($inv->give_to,38, ' ', STR_PAD_RIGHT);
+            $dt .= "      " . $inv->dot->format('d F Y') . "\n\n\n\n";
+        }
+
+        $expmemo = explode("\r\n", $inv->memo);
+        for ($i=0; $i < count($expmemo); $i++) { 
+            $dt .= "           " . $expmemo[$i] . "\n";
+        }
+
+        $t += count($expmemo);
+
         foreach ($invdets as $invdet) {
             $ts = $invdet->description;
-            $result = '';
-            if (strlen($ts) > 40){
+            $result = ''; $cpl = 50;
+            
+            if (strlen($ts) > $cpl){
                 $z = 0;
-                while (strlen($ts) > 40) {
-                    $substr = str_limit($ts,40,'');
+                while (strlen($ts) > $cpl) {
+                    $substr = str_limit($ts,$cpl,'');
                     $y = strripos($substr,' ');
                     $ts = substr($ts, $y+1);
-                    $substr = substr($substr, 0, $y);
-                    $dt .= "        ";
+                    $substr = substr($substr, 0, $y);   
+                    if($z == 0 && $invdet->kode_d_ger != "") {$dt .= $invdet->kode_d_ger . "|";}
+                    else { $dt .= "           "; }
                     $dt .= str_pad($substr, 52);
                     if ($z == 0){$dt .= str_pad(number_format($invdet->nominal,0,",","."),13,' ',STR_PAD_LEFT);$z=1;}
-                    $dt .= "\n\n";
-                    $t = $t + 2;
+                    $dt .= "\n";
+                    $t = $t + 1;
                 }
-                $dt .= $ts; 
+                $dt .= "           " . $ts . "\n"; 
             }
             else{
-                $dt .= "        ";
+                if($invdet->kode_d_ger != "") { $dt .= $invdet->kode_d_ger . "|"; }
+                else { $dt .= "           "; }
                 $dt .= str_pad($invdet->description, 52) . str_pad(number_format($invdet->nominal,0,",","."),13,' ',STR_PAD_LEFT);
-                $dt .= "\n\n";
-                $t = $t + 2;}
+                $dt .= "\n";
+                $t = $t + 1;}
         }
-        for ($i=$t; $i <= 13 ; $i++) {$dt .= "\n";}
-        $dt .= str_pad('Total Rp.', 60, ' ', STR_PAD_LEFT) . str_pad(number_format($inv->nominal,0,",","."),13,' ',STR_PAD_LEFT);
-        $dt = Chr(27) . Chr(69) . Chr(1) . $dt . Chr(27) . Chr(69) . Chr (0);
+        
+        //$dt .= "           " . $inv->memo;
 
-        if($inv->status != 'p') {
-            DB::table('invoices')->where('invoices_no',$inv->invoices_no)->update(['status' => 'p']);
+        for ($i=$t; $i <= 15 ; $i++) {$dt .= "\n";}
+        $dt .= str_pad('Total Rp.', 65, ' ', STR_PAD_LEFT) . str_pad(number_format($inv->nominal,0,",","."),13,' ',STR_PAD_LEFT);
+        //$dt = Chr(27) . Chr(69) . Chr(1) . $dt . Chr(27) . Chr(69) . Chr (0);
+
+        $dt .= "\n";
+        $cpl = 67;
+        $ts = $inv->aiw;
+        //$dt .= $inv->aiw . "\n";
+
+        if (strlen($ts) > $cpl){
+            $z = 0;
+            while (strlen($ts) > $cpl) {
+                $substr = str_limit($ts,$cpl,'');
+                $y = strripos($substr,' ');
+                $ts = substr($ts, $y+1);
+                $substr = substr($substr, 0, $y);
+                $dt .= "     ";
+                $dt .= $substr;
+                $dt .= "\n";
+            }
+            $dt .= "     " . $ts;
         }
-        else { $dt .= str_pad('reprint',80, ' ', STR_PAD_LEFT); }
-        $dt .= "\n   " . $inv->aiw . "\n";
+        else { $dt .= "     " . $ts . "\n"; }
+
         $dt .= Chr(12);
         return $dt;
     }
 }
+            
+        

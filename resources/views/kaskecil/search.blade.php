@@ -6,13 +6,14 @@
         <div class="row" style="padding-top: 25px;">
             <div class="col-12">
                 {!! Form::open(['url'=>'searchtransaction','method'=>'GET', 'class'=>'']) !!}
-                <div class="form-group row">
-                    {!! Form::label('no_bukti','No Bukti',['class'=>'col-md-6 col-sm-12 col-lg-2 form-control-label','style'=>'color:black;']) !!}
-                    <div class="col-lg-10">
-                        {!! Form::hidden('id',null,['id'=>'idkaskecil']) !!}
-                        {!! Form::text('No_bukti',null,['class'=>'form-control','placeholder'=>'Deskripsi kaskecil yang ingin dicari',
-                        'required'=>'','maxlength'=>'150','id'=>'qsearch']) !!}<br>{!! Form::submit('Show Detail',['class'=>'btn btn-sm btn-primary']) !!}
-                    </div>
+                <div class="input-group mb-3">
+                    {!! Form::hidden('id',null,['id'=>'idkaskecil']) !!}
+                    
+                        <span class="input-group-addon" ><i class="fa fa-search"></i></span>
+                    
+                    {!! Form::text('No_bukti',null,['class'=>'form-control form-control-sm border-right-0 border-left-0','placeholder'=>'Silakan input nomor BPU atau keterangan transaksi kaskecil yang ingin dicari...','required'=>'','maxlength'=>'150','id'=>'qsearch']) !!}
+                    
+                        {!! Form::submit('Show Detail',['class'=>'btn btn-sm btn-outline-success']) !!}
                     
                 </div>
                 {!! Form::close() !!}
@@ -25,8 +26,8 @@
         <div class="row" style="padding-top: 25px;">
             <div class="col-md-10 mx-auto">
             <div class="card">
-                <div class="card-header"><H2>Detail Transaksi</H2></div>
                 <div class="card-body" style="background-color: #d5f4e6;">
+                    Detail Transaksi<hr>
                     <table class="table table-striped">
                         <tr>
                             <td>Tanggal BPU</td>

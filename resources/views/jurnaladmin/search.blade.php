@@ -2,21 +2,16 @@
 
 @section('content')
     <div class="container">
-        @include('_partial.flash_message')
-        <div class="row" style="padding-top: 25px;">
-            <div class="col-12">
-                <H4><strong>Search Transaction</strong></H4>
-                {!! Form::open(['url'=>'search/transaction','method'=>'GET', 'class'=>'']) !!}
-                <div class="form-group row">
-                    {!! Form::label('no_bukti','No Bukti',['class'=>'col-sm-12 col-md-2 form-control-label','style'=>'color:black;']) !!}
-                    <div class="col-md-9 form-inline">
-                        {!! Form::text('No_bukti',null,['class'=>'form-control','placeholder'=>'No Bukti yang ingin dicari','required'=>'','maxlength'=>'150','id'=>'qsearch']) !!}&nbsp;{!! Form::submit('Search',['class'=>'btn btn-sm btn-primary']) !!}
-                    </div>
-                    
-                </div>
-                {!! Form::close() !!}
+        @include('_partial.flash_message')<br>
+        {!! Form::open(['url'=>'search/transaction','method'=>'GET', 'class'=>'']) !!}
+        <div class="form-group row">
+            <strong class="col-md-2">{!! Form::label('no_bukti','Search Inv. No.',['class'=>'form-control-label','style'=>'color:black;']) !!}</strong>
+            <div class="col-md-10 form-inline">
+                {!! Form::text('No_bukti',null,['class'=>'form-control form-control-sm','placeholder'=>'No Bukti yang ingin dicari','required'=>'','maxlength'=>'150','id'=>'qsearch']) !!}&nbsp;{!! Form::submit('Search',['class'=>'btn btn-sm btn-primary']) !!}
             </div>
+            
         </div>
+        {!! Form::close() !!}
     </div>
 
     @if(!empty($ja))
@@ -24,9 +19,9 @@
         <div class="row" style="padding-top: 25px;">
             <div class="col-md-10 mx-auto">
             <div class="card">
-                <div class="card-header"><H2>Detail Transaksi</H2></div>
                 <div class="card-body" style="background-color: #d5f4e6;">
-                    <table class="table table-striped">
+                    <strong>Transaction Detail</strong><hr>
+                    <table class="table table-striped table-sm">
                         <tr>
                             <td>Tanggal</td>
                             <td>{{ Carbon\Carbon::parse($ja->Tanggal)->format('d M Y') }}</td>

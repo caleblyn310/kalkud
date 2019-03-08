@@ -1,17 +1,13 @@
 @extends('layouts.app')
 
 @section('content')
-    @include('datareim.datareimfilelist')
-    <div class="container table-responsive" style="padding-top: 25px;">
-        <h5>Daftar Kas Kecil yang Akan Di Edit</h5>
+    <div class="container table-responsive" >
+        
         @include('_partial.flash_message')
-        <div class="tombol-nav sticky">
-            <a href="{{ url('mpdf/'.$namafile) }}" class="btn btn-danger btn-sm"
-               onclick="return confirm('Sudah yakin mau Reimburse??')">Request Reimburse</a>
-            <div class="col-md-2 float-right" style="height: 33px; ">{!! $kaskecil_list->links('vendor.pagination.bootstrap-4') !!}</div>
-        </div><br>
+        <div class="tomb text-right"><a href="{{ url('mpdf/'.$namafile) }}" class="btn btn-danger btn-sm" onclick="return confirm('Sudah yakin mau Reimburse??')">Request</a></div>
         @if (!empty($kaskecil_list))
-            <table class="table table-striped table-bordered table-hover table-condensed ">
+            <table class="table table-striped table-bordered table-hover table-condensed table-sm">
+                <caption style="caption-side: top;color: #171717"><strong>Daftar Kas Kecil yang Akan Di Edit</strong></caption>
                 <thead><tr>
                     <th>Tanggal</th><th>Kode D-Ger</th><th>Sub<br>Kode</th><th>No BPU</th><th>Deskripsi</th><th>Nominal</th><th style="width:90px;">Action</th>
                 </tr></thead>

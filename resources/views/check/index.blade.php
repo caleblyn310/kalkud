@@ -2,23 +2,16 @@
 
 @section('content')
 <div class="container table-responsive">@include('_partial.flash_message')
-    <div class="row" style="padding-top: 25px;">
-    <h4 class="col-lg-6 col-md-6 col-sm-12">Daftar Cheque</h4>
     @if(Auth::user()->kode_unit != 100)
-    <div class="col-lg-6 col-md-6 col-sm-12 float-rigt">
-        <a href="cheque/create" class="btn btn-sm btn-primary float-right">Tambah Data Cheque</a></div>
-    </div>
-    @endif
-    @if(Auth::user()->kode_unit == 100)
-    <div class="col-lg-6 col-md-6 col-sm-12 float-rigt">
-        <a href="{{ asset('downloadbpb') }} " class="float-right btn btn-sm btn-primary">Download BPB</a></div>
-    </div>
+    <div class="col-lg-6 col-md-6 col-sm-12 text-right tomb">
+        <a href="cheque/create" class="btn btn-sm btn-primary ">&nbsp;&nbsp;&nbsp;ADD&nbsp;&nbsp;&nbsp;</a></div>
     @endif
     
     @if (!empty($check_list))
     <table class="table table-striped table-bordered table-hover table-condensed table-sm">
+        <caption style="caption-side: top; color: #171717"><strong>List of Cheque</strong></caption>
         <thead><tr>
-            <th>Tanggal</th><th>No Cheque</th><th>Data Reimburse</th><th>Nominal</th><th>Action</th>
+            <th>Date</th><th>No. Cheque</th><th>Reimburse Data</th><th>Nominal</th><th>Action</th>
         </tr></thead>
         <tbody>
         <?php $total = 0 ?>
@@ -49,7 +42,7 @@
             </td>
         </tr>
         <?php endforeach ?>
-        @if (Auth::user()->kode_unit == 100)
+        @if (Auth::user()->kode_unit == 1000)
             <tr><td colspan="5">
                 {!! $check_list->links('vendor.pagination.bootstrap-4') !!}
             </td></tr>
