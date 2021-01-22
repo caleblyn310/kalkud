@@ -5,8 +5,7 @@
         <div class="row" style="padding-top: 25px;">
             <div class="col-lg-8 mx-auto">
             <div class="card">
-                <div class="card-header"><H2>Add Transaction</H2></div>
-                <div class="card-body">
+                <div class="card-body"><H6>Add Transaction</H6><hr>
                     {!! Form::open(['url'=>'jurnaladmin','class'=>'']) !!}
                     @include('jurnaladmin.form')
                     {!! Form::close() !!}

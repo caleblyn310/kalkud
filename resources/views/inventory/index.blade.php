@@ -2,15 +2,14 @@
 
 @section('content')
     <div class="container table-responsive">
-        <div class="row" style="padding-top: 25px;">
-        <h5 class="float-left col">Daftar Inventory</h5>
+        <div class="row" style="padding-top: 15px;">
         @include('_partial.flash_message')
-        <hr></div>
-        <div class="row col">
-        <a href="inventory/create" class="btn btn-sm btn-primary">Tambah Inventory</a>&nbsp;&nbsp;
-        <a href={{ asset('inventory/genDep') }} class="btn btn-sm btn-danger" onclick="return confirm('Are you sure want to generate depreciation report for period {{ $period->format('F Y') }}?')">Generate Depreciation Report</a>&nbsp;&nbsp;
-        <span class="align-middle pt-1"><strong>Periode {{ $period->format('F Y') }}</strong></span>
-        </div><br>
+        <div class="col-2" style="color: black;"><h5><strong>Daftar Inventory</strong></h5></div>
+        <div class="col">
+        <a href="inventory/create" class="btn btn-sm btn-success">Tambah Inventory</a>
+        <a href={{ asset('inventory/genDep') }} class="btn btn-sm btn-danger" onclick="return confirm('Are you sure want to generate depreciation report for period {{ $period->format('F Y') }}?')">Generate Depreciation Report</a>
+        <span class="align-middle pt-1"><strong>Periode {{ $period->format('F Y') }}</strong></span></div>
+        </div><hr>
         <div>
         @if (!empty($inventory_list))
             <table class="table table-striped table-bordered table-hover table-condensed table-sm">

@@ -16,3 +16,7 @@ use Illuminate\Http\Request;
 Route::middleware('auth:api')->get('/user', function (Request $request) {
     return $request->user();
 });
+
+Route::get('cheque','ChequeAPIController@index');
+Route::get('cheque/{id}','ChequeAPIController@show');
+Route::get('kaskecil/{tblview}','ChequeAPIController@getKaskecil');

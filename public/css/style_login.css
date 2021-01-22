@@ -1,0 +1,46 @@
+form-group {
+        margin-bottom: 20px;
+    }
+    #name, #password {
+        min-height: 38px;
+        box-shadow: none !important;
+        border-width: 0 0 1px 0;
+        border-radius: 0;
+        background-color: #fbfff1;
+        padding-left: 5px;
+    }
+    #name:focus, #password:focus {
+        border-color: #ccc;
+    }
+
+    .input-group-prepend .input-group-text {
+        max-width: 42px;
+            text-align: center;
+            background: none;
+            border-width: 0 0 1px 0;
+            padding-left: 5px;
+            border-radius: 0;
+    }
+
+    .card-body .avatar {
+        position: absolute;
+        margin: 0 auto;
+        left: 0;
+        right: 0;
+        top:-50px;
+        width: 100px;
+        height: 100px;
+        border-radius: 50%;
+        z-index: 10;
+        background: #567890;
+        box-shadow: 0px 1px 20px rgba(0,5,0,0.5) ;
+    }
+
+    .card-body .avatar img {
+        width: 100%;
+    }
+
+    .card-body h4 {
+        margin-top: 50px;
+        margin-bottom: 15px;
+    }

@@ -5,13 +5,12 @@
         @include('_partial.flash_message')
         <div class="row" style="padding-top: 25px;">
             <div class="col-12">
-                
-                <div class="form-group row">
-                    {!! Form::label('periode','Periode',['class'=>'col-md-6 col-sm-12 col-lg-2 form-control-label','style'=>'color:black;']) !!}
-                    <div class="col-md-10">
+                <div class="form-group row" style="background-color: #eef9fd; padding: 10px 0px 10px 0px;">
+                    <strong>{!! Form::label('periode','SAA '.$uri,['class'=>'col-6 form-control-label','style'=>'color:black;']) !!}</strong>
+                    <div class="col-6">
                     	<div class="row"> 
-                        FROM&nbsp;{!! Form::date('tanggal1','2017-12-01',['class'=>'form-control col-md-2','required'=>'','id'=>'tanggal1']) !!}&nbsp;TO&nbsp; 
-                        {!! Form::date('tanggal2','2017-12-31',['class'=>'form-control col-sm-2','required'=>'','id'=>'tanggal2']) !!}&nbsp;{!! Form::button('Get Data',['class'=>'btn btn-sm btn-primary','id'=>'getsaa']) !!}
+                        <b>FROM</b>&nbsp;&nbsp;&nbsp;{!! Form::date('tanggal1','2019-01-01',['class'=>'form-control form-control-sm col-md-3','required'=>'','id'=>'tanggal1']) !!}&nbsp;&nbsp;&nbsp;<b>TO</b>&nbsp;&nbsp;&nbsp; 
+                        {!! Form::date('tanggal2','2019-01-31',['class'=>'form-control form-control-sm col-md-3','required'=>'','id'=>'tanggal2']) !!}&nbsp;&nbsp;&nbsp;{!! Form::button('Get Data',['class'=>'btn btn-sm btn-primary','id'=>'getsaa']) !!}
                     </div>
                     </div>
                 </div>
@@ -28,10 +27,11 @@ $(function() {
   $('#getsaa').click(function(e) {
     e.preventDefault();
     spinner.show();
+    var t = "{!! $uri !!}"; 
 
     $.ajax({
     	type: 'GET',
-    	url: '/getSAA',
+    	url: "/getSAA" + t,
     	data: {
     		'tanggal1': $('#tanggal1').val(),
     		'tanggal2': $('#tanggal2').val(),
@@ -41,7 +41,11 @@ $(function() {
     		var path = res.path;
     		location.href = path;
     		spinner.hide();
-    	}
+    	},
+        error: function(xhr, status, error){
+            var errorMessage = xhr.status + ': ' + xhr.statusText;
+            alert('Error - ' + errorMessage);
+        }
     });
   });
 });

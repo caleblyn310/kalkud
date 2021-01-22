@@ -1,0 +1,167 @@
+//Continues form version
+        $t = 0;
+        $dt = "\n" . str_pad('Bukti Pengeluaran Bank', 76, ' ', STR_PAD_BOTH) . "\n";
+        $dt .= "NO: ".$inv->invoices_no." (".$bank->bank.")\n";
+        $dt .= str_pad("Pay To: ".$inv->pay_to,60,' ',STR_PAD_RIGHT);
+        $dt .= str_pad($inv->dot->format('d F Y'),16,' ',STR_PAD_LEFT)."\n";
+        $dt .= str_pad("Give To: ".$inv->give_to,70,' ',STR_PAD_RIGHT)."\n";
+        $dt .= "- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -\n";
+        $dt .= str_pad('Description', 62) . '| ' . str_pad('Nominal (IDR)', 13, ' ', STR_PAD_LEFT) . "\n";
+        $dt .= "- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -\n";
+        foreach ($invdets as $invdet) {
+            /*$dt .= str_pad($invdet->description, 62) . '| ' . str_pad(number_format($invdet->nominal,0,",","."),13,' ',STR_PAD_LEFT);
+            $dt .= "\n";
+            $t++;*/
+            $ts = $invdet->description;
+            $result = ''; $cpl = 50;
+            
+            if (strlen($ts) > $cpl){
+                $z = 0;
+                while (strlen($ts) > $cpl) {
+                    $substr = str_limit($ts,$cpl,'');
+                    $y = strripos($substr,' ');
+                    $ts = substr($ts, $y+1);
+                    $substr = substr($substr, 0, $y);   
+                    if($z == 0 && $invdet->kode_d_ger != "") {$dt .= $invdet->kode_d_ger . "|";}
+                    else { $dt .= "          |"; }
+                    $dt .= str_pad($substr, 51) . "|";
+                    if ($z == 0){$dt .= str_pad(number_format($invdet->nominal,0,",","."),14,' ',STR_PAD_LEFT);$z=1;}
+                    $dt .= "\n";
+                    $t++;
+                }
+                $dt .= "          |" . str_pad($ts, 51) . "|" . "\n"; 
+            }
+            else{
+                if($invdet->kode_d_ger != "") { $dt .= $invdet->kode_d_ger . "|"; }
+                else { $dt .= "           "; }
+                $dt .= str_pad($invdet->description, 51) . str_pad(number_format($invdet->nominal,0,",","."),14,' ',STR_PAD_LEFT);
+                $dt .= "\n";
+                $t++;}
+        }
+        for ($i=$t; $i <= 10 ; $i++) {$dt .= "\n";}
+        $dt .= "- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -\n";
+        $dt .= str_pad('Total Rp.', 62, ' ', STR_PAD_LEFT) . '|' . str_pad(number_format($inv->nominal,0,",","."),14,' ',STR_PAD_LEFT);
+        $dt .= "\n\n" . str_pad('Submit By', 25, ' ', STR_PAD_BOTH) . str_pad('Receive By', 25, ' ', STR_PAD_BOTH);
+        $dt .= str_pad('Known By', 25, ' ', STR_PAD_BOTH);
+        $dt .= Chr(13) . Chr(10) . Chr(13) . Chr(10) . Chr(13) . Chr(10) . Chr(13) . Chr(10);
+        $dt .= str_pad("(" . str_pad('.', 20 ,'.') . ")",25, ' ', STR_PAD_BOTH);
+        $dt .= str_pad("(" . str_pad('.', 20 ,'.') . ")",25, ' ', STR_PAD_BOTH);
+        $dt .= str_pad("(" . str_pad('.', 20 ,'.') . ")",25, ' ', STR_PAD_BOTH) . "\n";
+        //$dt = Chr(27) . Chr(69) . Chr(1) . $dt . Chr(27) . Chr(69) . Chr (0);
+
+        if($inv->status != 'p') {
+            DB::table('invoices')->where('invoices_no',$inv->invoices_no)->update(['status' => 'p']);
+        }
+        else { $dt .= str_pad('reprint',76, ' ', STR_PAD_LEFT) . "\n"; }
+        $dt .= Chr(12);
+        return $dt;
+
+$t = 0;$cpl = 38;
+        $dt = "\n\n\n\n            " . $bank->bank;
+        if($inv->status == 'p' || $inv->status == 'dg') { $dt .= str_pad("No: " . $inv->invoices_no.'(reprint)',41, ' ', STR_PAD_LEFT); }
+        else { DB::table('invoices')->where('invoices_no',$inv->invoices_no)->update(['status' => 'p']); 
+                $dt .= str_pad("No: ".$inv->invoices_no,41, ' ', STR_PAD_LEFT);}
+        $dt .= "\n\n";
+        $dt .= "                  " . $inv->pay_to . "\n";
+        $ts = $inv->give_to;$z = 0;
+        if (strlen($ts) > $cpl){
+            while (strlen($ts) > $cpl) {
+                $substr = str_limit($ts,$cpl,'');
+                $y = strripos($substr,' ');
+                $ts = substr($ts, $y+1);
+                $substr = substr($substr, 0, $y);
+                $dt .= "                  " . str_pad($substr,38, " ", STR_PAD_RIGHT);
+                if ($z == 0) { $dt .= "      " . $inv->dot->format('d F Y'); $z++;}
+                $dt .= "\n";
+            }
+            $dt .= "                  " . $ts . "\n\n\n";
+        }
+        else {
+            $dt .= "                  " . str_pad($inv->give_to,38, ' ', STR_PAD_RIGHT);
+            $dt .= "      " . $inv->dot->format('d F Y') . "\n\n\n\n";
+        }
+
+        $expmemo = explode("\r\n", $inv->memo);
+        for ($i=0; $i < count($expmemo); $i++) { 
+            $dt .= "           " . $expmemo[$i] . "\n";
+        }
+
+        $t += count($expmemo);
+        $detcount = count($invdets);$chr = 65;
+
+        foreach ($invdets as $invdet) {
+            $ts = $invdet->description;$tempinv = "";
+            $result = ''; $cpl = 50;
+            if($detcount > 1) {
+                $tempinv = " (".$inv->invoices_no.chr($chr)."/".explode(" ", $bank->bank)[0]."-". $inv->dot->format('m/y') .")";
+                $ts .= $tempinv; $chr++;
+            }
+            else {
+                $tempinv = " (".$inv->invoices_no."/".explode(" ", $bank->bank)[0]."-". $inv->dot->format('m/y') .")";
+                $ts .= $tempinv;}
+            
+            if (strlen($ts) > $cpl){
+                $z = 0;
+                while (strlen($ts) > $cpl) {
+                    $substr = str_limit($ts,$cpl,'');
+                    $y = strripos($substr,' ');
+                    $ts = substr($ts, $y+1);
+                    $substr = substr($substr, 0, $y);   
+                    if($z == 0 && $invdet->kode_d_ger != "") {$dt .= $invdet->kode_d_ger . "|";}
+                    else { $dt .= "           "; }
+                    $dt .= str_pad($substr, 52);
+                    if ($z == 0){$dt .= str_pad(number_format($invdet->nominal,0,",","."),13,' ',STR_PAD_LEFT);$z=1;}
+                    $dt .= "\n";
+                    $t = $t + 1;
+                }
+                $dt .= "           " . $ts . "\n"; 
+            }
+            else{
+                if($invdet->kode_d_ger != "") { $dt .= $invdet->kode_d_ger . "|"; }
+                else { $dt .= "           "; }
+                $dt .= str_pad($ts, 52) . str_pad(number_format($invdet->nominal,0,",","."),13,' ',STR_PAD_LEFT);
+                $dt .= "\n";
+                $t = $t + 1;}
+
+            if($invstatus == 's'){
+                $ja = new JurnalAdmin();
+                if($bank->id == '1') $ja->No_account = '112.35.111';
+                elseif($bank->id == '2') $ja->No_account = '112.28.111';
+                elseif($bank->id == '3') $ja->No_account = '112.33.111';
+                $ja->No_bukti = $tempinv;
+                $ja->Tanggal = $inv->dot->format('Y-m-d');
+                $ja->Uraian = $invdet->description;
+                $ja->Debet = 0;
+                $ja->Kredit = $invdet->nominal;
+                $ja->Kontra_acc = $invdet->kode_d_ger;
+                $ja->save();}
+        }
+        
+        //$dt .= "           " . $inv->memo;
+
+        for ($i=$t; $i <= 15 ; $i++) {$dt .= "\n";}
+        $dt .= str_pad('Total Rp.', 65, ' ', STR_PAD_LEFT) . str_pad(number_format($inv->nominal,0,",","."),13,' ',STR_PAD_LEFT);
+        //$dt = Chr(27) . Chr(69) . Chr(1) . $dt . Chr(27) . Chr(69) . Chr (0);
+
+        $dt .= "\n";
+        $cpl = 67;
+        $ts = $inv->aiw;
+        //$dt .= $inv->aiw . "\n";
+
+        if (strlen($ts) > $cpl){
+            $z = 0;
+            while (strlen($ts) > $cpl) {
+                $substr = str_limit($ts,$cpl,'');
+                $y = strripos($substr,' ');
+                $ts = substr($ts, $y+1);
+                $substr = substr($substr, 0, $y);
+                $dt .= "     ";
+                $dt .= $substr;
+                $dt .= "\n";
+            }
+            $dt .= "     " . $ts;
+        }
+        else { $dt .= "     " . $ts . "\n"; }
+
+        $dt .= Chr(12);
+        return $dt;

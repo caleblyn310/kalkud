@@ -2,64 +2,53 @@
     <input type="hidden" value="{{ Session::get('flash_message') }}" id="msg">
 @endif
 
-@if(!empty($invoices_no))
-    Edit Invoice ({{ $invoices_no }})<hr>
-    <input type="hidden" value="{{ $invoices_no }}" id="invoices_no" name="invoices_no">
-@else 
-    <div class="row form-group">
-        {!! Form::label('invoices_no','New Invoice',['class'=>'col-lg-2 col-md-6 col-sm-12 form-control-label']) !!}
-        <div class="col-lg-4 col-md-6 col-sm-12">
-        {!! Form::text('invoices_no',null,['class'=>'form-control form-control-sm','placeholder'=>'Invoice Number...','required'=>'','maxlength'=>'5']) !!}</div>
-        </div><hr>
-@endif
-
 <div class="row">
-    <div class="col-6"> 
-@if ($errors->any())
-    <div class = "form-group row {{ $errors->has('dot') ? 'has-error' : 'has-success' }}">
-@else
-<div class="form-group row">
-@endif
+    <div class="col-4"> 
+        <div class="form-group row">
     {!! Form::label('dot','Tanggal',['class'=>'col-lg-4 col-md-6 col-sm-12 form-control-label']) !!}
     <div class="col-lg-8 col-sm-12">
         {!! Form::date('dot',!empty($invoices) ? $invoices->dot->format('Y-m-d') : date('Y-m-d')
-        ,['class'=>'form-control-sm form-control','required'=>'']) !!}&nbsp;
-    @if($errors->has('dot'))<span>{{ $errors->first('dot') }}</span>@endif</div>
-</div>
-</div>
+        ,['class'=>'form-control-sm form-control','required'=>'']) !!}
+    </div>
+    </div>
+    </div>
 
-<div class="col-6">
+<div class="col-5">
 <div class="form-group row">
-    {!! Form::label('bank','BANK',['class'=>'col-lg-4 col-sm-12 form-control-label']) !!}
-    <div class="col-lg-8">
+    {!! Form::label('bank','BANK',['class'=>'col-lg-3 col-sm-12 form-control-label']) !!}
+    <div class="col-lg-9">
         {!! Form::select('bank',$bank_list,null,['class'=>'form-control form-control-sm','maxlength'=>'2']) !!}
     </div>
 </div>
 </div>
+    <div class="col-3"><div class="form-group row">
+        <div class="col-lg-12 col-md-6 col-sm-12">
+        {!! Form::text('invoices_no',$invno,['class'=>'form-control form-control-sm','id' => 'invoices_no','placeholder'=>'Invoice Number...','required'=>'','maxlength'=>'5']) !!}</div>
+        </div>
+</div>
 </div>
 
 <div class="row">
-    <div class="col-6">
+    <div class="col-lg-5">
 <div class="form-group row">
-    {!! Form::label('pay_to','Pay to',['class'=>'col-lg-4 col-sm-12 form-control-label']) !!}
+    {!! Form::label('pay_to','Pay to',['class'=>'col-lg-3 col-sm-12 form-control-label']) !!}
     <div class="col-lg-8">
-        {!! Form::text('pay_to',null,['class'=>'form-control-sm form-control','placeholder'=>'Name','required'=>'']) !!}
+        {!! Form::text('pay_to',null,['class'=>'form-control-sm form-control','placeholder'=>'Name']) !!}
     </div>
 </div>
 </div>
 
-<div class="col-6">
+<div class="col-lg-5">
 <div class="form-group row">
     {!! Form::label('give_to','Submit to',['class'=>'col-lg-4 col-md-6 col-sm-12 form-control-label']) !!}
     <div class="col-lg-8">
-        {!! Form::text('give_to',null,['class'=>'form-control-sm form-control','placeholder'=>'Name','required'=>'']) !!}
+        {!! Form::text('give_to',null,['class'=>'form-control-sm form-control','placeholder'=>'Name']) !!}
     </div>
 </div>
 </div>
-</div>
 
-<button type="button" class="btn btn-sm btn-info add-modal">Add Detail</button>
-<button type="button" class="btn btn-sm btn-info memo-modal">Add Memo</button><hr>
+<div class="col-lg-2"><button type="button" class="btn btn-sm btn-info add-modal">Add Detail</button></div>
+</div>
 
 <table class="table table-striped table-bordered table-hover table-sm" id="postTable">
     <thead>
@@ -74,7 +63,8 @@
         @if(!empty($invoicesdetail_list))
         @foreach($invoicesdetail_list as $invoicesdetail)
             <tr class="item{{$invoicesdetail->id}}">
-                <td>{{$invoicesdetail->description}}&nbsp;({{$invoicesdetail->kode_d_ger}})</td>
+                <td>{{$invoicesdetail->description}}<br>
+                    <span class="badge badge-success">({{$invoicesdetail->kode_d_ger . "-" . App\AccNum::where('accnum_id',$invoicesdetail->kode_d_ger)->value('desc')}})</span></td>
                 <td>{{$invoicesdetail->nominal}}</td>
                 <td>
                     <button type='button' class="edit-modal btn btn-info btn-sm fa fa-pencil-square-o" data-id="{{$invoicesdetail->id}}" data-title="{{$invoicesdetail->description}}" data-content1="{{$invoicesdetail->nominal}}" data-content2="{{$invoicesdetail->kode_d_ger}}"></button>
@@ -91,6 +81,7 @@
             {!! Form::hidden('nominals',(!empty($total)) ? $total : 0,['id'=>'nominals']) !!}
             {!! Form::hidden('user_id',Auth::user()->id,['id'=>'user_id']) !!}
             {!! Form::hidden('aiw',(!empty($aiw)) ? $aiw : 0,['id'=>'aiw']) !!}
+            {!! Form::hidden('iddet', 0,['id'=>'iddet']) !!}
         </tr>
         <tr>
             <td colspan="2" id="terbilang-output"></td>
@@ -198,7 +189,6 @@
 <div class="form-group row">
     <div class="col-md-8 col-md-offset-4">
         <button type="submit" class="btn btn-sm btn-info" name="submitbutton" value="save">SAVE</button>
-        <button type="submit" class="btn btn-sm btn-info" name="submitbutton" value="saveprint">SAVE & Print</button>
         @if($fs == 'new')
             <a href="{{ asset('invoices') }}" class="btn btn-sm btn-info" id='btnCancel'>Cancel</a>
         @else
@@ -211,6 +201,33 @@
 <script src="{{ asset('js/webprint.js') }}"></script>
 <script src="{{ asset('terbilang/jTerbilang.js') }}"></script>
 <script>
+    var detail = ''; var bankAwal = 0; var monAwal = 0; var yearAwal = 0;var fs = '{{ $fs }}';
+    $('#dot,#bank').change(function () {
+        var date = new Date($('#dot').val());
+          month = date.getMonth() + 1;
+          year = date.getFullYear();
+          bank = $('#bank').val();
+        $.ajax({
+            type: 'GET',
+            url: '/getInvNo',
+            data: {
+                'mon': month,
+                'year': year,
+                'bank': bank,
+            },
+            cache: false,
+            success: function(data) {
+                    var t = data.invno;
+                    if(fs == 'edit' && bankawal == bank && monAwal == month && yearAwal == year)
+                        {t = t - 1;}
+                    if(t < 10) {t = '00' + t;}
+                    else if (t < 100) {t = '0' + t;}
+
+                    $('#invoices_no').val(t);
+                }
+        })
+    });
+
     if( $('input#msg').length )
     {toastr.error($('input#msg').val(),'Error Message', {timeOut: 2000});}
 
@@ -232,13 +249,47 @@
             style : 3,
             input_type : "text",
             output_div : "terbilang-output",
+            akhiran : " "
+          });
+        var word = ["Nol","Satu","Dua","Tiga","Empat","Lima","Enam","Tujuh","Delapan","Sembilan"];
+        var sen = $('#totalnominal').html().split('.')[1];
+        sen = parseInt(sen); 
+        var senstring = "dan " + word[Math.floor(sen/10)] + " ";
+        senstring += word[sen%10] + " Rupiah";
+        if(senstring.includes("dan Nol Nol ") || senstring.includes("dan undefined undefined ")) {
+            senstring = senstring.replace("dan Nol Nol ","");
+            senstring = senstring.replace("dan undefined undefined ","");
+        }
+        $('#terbilang-output').html($('#terbilang-output').html()+senstring);
+        $('#aiw').val($('#terbilang-output').html());
+    }
+    /*function myTerbilang() {
+        $('#totalnominal').terbilang({
+            style : 3,
+            input_type : "text",
+            output_div : "terbilang-output",
             akhiran : "Rupiah"
           });
         $('#aiw').val($('#terbilang-output').html());
-    }
+    }*/
+    $('#pay_to').autocomplete({
+        source: "http://"+location.hostname+"/searchauto/supplier",
+        minLength: 3,
+        select: function(event, ui) {
+            $('#pay_to').val(ui.item.value);
+            $('#give_to').val(ui.item.id);
+        }
+    });
+
     $(document).ready(function () {
         $("#totalnominal").val($('#totalnominal').html());
         myTerbilang();
+        if(fs == 'edit') {
+            var date = new Date($('#dot').val());
+            monAwal = date.getMonth() + 1;
+            yearAwal = date.getFullYear();
+            bankawal = $('#bank').val();
+        }
     });
 
     //Reset COA
@@ -259,7 +310,7 @@
         select: function(event, ui) {
             $('#q_add').val(ui.item.value);
             $('#kode_d_ger_add').val(ui.item.id);
-            $('#description_add').val(ui.item.value.slice(0, ui.item.value.length-13));
+            //$('#description_add').val(ui.item.value.slice(0, ui.item.value.length-13));
         }
     });
 
@@ -269,7 +320,7 @@
         select: function(event, ui) {
             $('#q_edit').val(ui.item.value);
             $('#kode_d_ger_edit').val(ui.item.id);
-            $('#description_edit').val(ui.item.value.slice(0, ui.item.value.length-13));
+            //$('#description_edit').val(ui.item.value.slice(0, ui.item.value.length-13));
         }
     });
 
@@ -281,7 +332,13 @@
 
     //Add description and nominal invoice
     $(document).on('click', '.add-modal', function() {
-        if($('input#invoices_no').val().length >= 4 )
+        $('.modal-title').text('Add Description');
+                        $('#description_add').val('');
+                        $('#nominal').val('');
+                        $('#q_add').val('');
+                        $('#kode_d_ger_add').val('');
+                        $('#addModal').modal('show');
+        /*if($('input#invoices_no').val().length >= 4 )
         {
             $.ajax({
                 type: 'GET',
@@ -301,7 +358,7 @@
                     }
                 }
             });
-        }
+        }*/
     });
     $('.modal-footer').on('click', '.add', function() {
         if ($('#description').val() == "") {
@@ -344,10 +401,13 @@
                 } else {
                     toastr.success('Successfully added Description!', 'Success Alert', {timeOut: 2500});
                     $('#postTable').append("<tr class='item" + data.id + "'><td>" + data.description + " (" + data.kode_d_ger + ")</td><td>" + data.nominal + "</td><td><button type='button' class='edit-modal btn btn-info btn-sm fa fa-pencil-square-o' data-id='" + data.id + "' data-title='" + data.description + "' data-content1='" + data.nominal + "' data-content2='" + data.kode_d_ger + "'></button> <button type='button' class='delete-modal btn btn-danger btn-sm fa fa-trash' data-id='" + data.id + "' data-title='" + data.description + " (" + data.kode_d_ger + ")' data-content='" + data.nominal + "'></button></td></tr>");
-                    $('#totalnominal').html(parseInt($('#totalnominal').html()) + parseInt(data.nominal));
+                    $('#totalnominal').html(parseFloat($('#totalnominal').html()) + parseFloat(data.nominal));
+                    $('#totalnominal').html(Number.parseFloat($('#totalnominal').html()).toFixed(2));
                     $('#nominals').val($('#totalnominal').html());
                     $("#totalnominal").val($('#totalnominal').html());
                     myTerbilang();
+                    detail = detail + data.id + "|";
+                    $('#iddet').val(detail);
                 }
             },
         });
@@ -406,7 +466,8 @@
                 } else {
                     toastr.success('Successfully updated Post!', 'Success Alert', {timeOut: 2500});
                     $('.item' + data.id).replaceWith("<tr class='item" + data.id + "'><td>" + data.description + " (" + data.kode_d_ger + ")</td><td>" + data.nominal + "</td><td><button type='button' class='edit-modal btn btn-info btn-sm fa fa-pencil-square-o' data-id='" + data.id + "' data-title='" + data.description + "' data-content1='" + data.nominal + "' data-content2='" + data.kode_d_ger + "'></button> <button type='button' class='delete-modal btn btn-danger btn-sm fa fa-trash' data-id='" + data.id + "' data-title='" + data.description + " (" + data.kode_d_ger + ")' data-content='" + data.nominal + "'></button></td></tr>");
-                    $('#totalnominal').html(parseInt($('#totalnominal').html()) + parseInt(data.nominal) - parseInt(nom_edit));
+                    $('#totalnominal').html(parseFloat($('#totalnominal').html()) + parseFloat(data.nominal) - parseFloat(nom_edit));
+                    $('#totalnominal').html(Number.parseFloat($('#totalnominal').html()).toFixed(2));
                     $('#nominals').val($('#totalnominal').html());
                     $("#totalnominal").val($('#totalnominal').html());
                     myTerbilang();
@@ -432,6 +493,7 @@
                 '_token': $('input[name=_token]').val(),
             },
             success: function(data) {
+                detail.replace(id+"|","");
                 toastr.success('Successfully deleted Post!', 'Success Alert', {timeOut: 2500});
                 $('#totalnominal').html(parseInt($('#totalnominal').html()) - parseInt(data.nominal));
                 $('#nominals').val($('#totalnominal').html());

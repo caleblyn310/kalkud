@@ -26,6 +26,14 @@ class DatareimController extends Controller
 
     public function index()
     {
+        if(Auth::user()->kode_unit == 100)
+        {
+            $client = new \GuzzleHttp\Client();
+            $request = $client->get('https://kalamkudus.or.id/kaskecil/api/getReimburseList');
+            $reimburse_list = json_decode($request->getBody()->getContents());
+            
+            return view('kaskecil.requestlist',compact('reimburse_list'));
+        }
         return $this->funcsdr();
     }
 
@@ -36,14 +44,24 @@ class DatareimController extends Controller
             $kaskecil_list = DB::table($namafile)->get();
             $totalreim = $kaskecil_list->sum('nominal');
             $kaskecil_list = DB::table($namafile)->orderBy('no_bukti')->orderBy('tanggal_trans')->orderBy('id')->get();
+            
             DB::table('simpanfile')->where('namafile','LIKE',$namafile.'%')->update(['mode'=>'edit']);
             return view('datareim.datareimedit',compact('kaskecil_list','namafile','totalreim'));
         }
         else {
+            $kaskecil_list = Kaskecil::where([['kode_unit', Auth::user()->kode_unit], ['status', 'bu']])
+                    ->orderBy('no_bukti')->orderBy('tanggal_trans')->orderBy('id');
+                    
+            $totalreim = $kaskecil_list->sum('nominal');
+            
+            $plafon = DB::table('kodeunit')->where('id', Auth::user()->kode_unit)->value('plafon');
+            
             $t = explode('z',$namafile);
             $kaskcl = DB::select(DB::raw("select * from $t[0] WHERE id = $t[1]"));
             $kaskecil = $kaskcl[0];$namafile = $t[0];
-            return view('datareim.editreim',compact('kaskecil','namafile'));
+
+            $sisaSaldo = $plafon - $totalreim + $kaskecil->nominal;
+            return view('datareim.editreim',compact('kaskecil','namafile','sisaSaldo'));
         }
     }
 
@@ -84,5 +102,14 @@ class DatareimController extends Controller
         //(count($reimburse)>0) ? $reimburse = $reimburse[0]->namafile . '|' . $reimburse[0]->mode : $reimburse = '' ;
         return Response::json($reimburse)->withCallback();
         //return view('datareim.datareim',compact('tempf'));
+    }
+
+    public function getReimburseDetail($tblview)
+    {
+        $client = new \GuzzleHttp\Client();
+        $request = $client->get('https://kalamkudus.or.id/kaskecil/api/getReimburseDetail/' . $tblview);
+        $reimburse_detail = json_decode($request->getBody()->getContents());
+        
+        return view('datareim.datareimedit',compact('reimburse_detail'));
     }
 }

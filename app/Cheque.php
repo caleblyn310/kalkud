@@ -13,4 +13,8 @@ class Cheque extends Model
     protected $fillable = ['tanggal_cair','no_check','nominal','data_reimburse','kode_unit'];
 
     protected $dates = ['tanggal_cair'];
+
+    public function kodeunit() {
+    	return $this->belongsTo('App\KodeUnit','kode_unit');
+    }
 }

@@ -20,8 +20,10 @@
     <script>var buff;</script>
 </head>
 <body>
-<div id="app" class="h-100">
+<div id="app">
+    @if(Auth::check())
     @include('layouts.navbar')
+    @endif
     @yield('content')
 </div>
 <div id="loader"></div>
@@ -37,6 +39,19 @@
 @yield('scripts')
 
 <script>
+$('#ska').click(function () {
+        if(confirm("Are you sure want to upload 'kas admin' data??")) 
+        {spinner.show();
+                $.ajax({
+                  type: 'GET',
+                  url: '/sendKA',
+                  success: function(data) {
+                    spinner.hide();
+                    toastr.success('Kas admin uploaded', 'Success Alert', {timeOut: 3000});
+                  }
+                });}
+    });
+    
 var spinner = $('#loader');
 $(function() {
   $('#recalculate').click(function(e) {

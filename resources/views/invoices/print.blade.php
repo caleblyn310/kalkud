@@ -27,13 +27,13 @@
             dataType: "text",
             success: function(data, textStatus, jq) {
                 var i = 0;
-                for(i = 0; i < 3; i++){
-                    webprint.printRaw(data, 'l310');
+                //for(i = 2; i < 3; i++){
+                    webprint.printRaw(data, 'lx300');
                     toastr.success('Successfully printed!', 'Success Alert', {timeOut: 2500});
                     setTimeout(function () {
-                       window.location.href = "http://"+location.hostname ;
+                       window.location.href = "http://"+location.hostname+"/invoices" ;
                     }, 3000);
-                }
+                //}
                 //window.location.href = "http://"+location.hostname+"/invoices";
             }
         });

@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Auth;
 use DB;
 use Validator;
 use Session;
+use Carbon\Carbon;
 use App\Cheque;
 use App\Simpanfile;
 
@@ -23,7 +24,12 @@ class ChequeController extends Controller
     public function index()
     {
         if(Auth::user()->kode_unit == 100) {
-            $check_list = Cheque::where([['mode','!=','print'],['id','>',10]])->orderBy('tanggal_cair','desc')->get();
+            //$check_list = Cheque::where([['mode','!=','print'],['id','>',10]])->orderBy('tanggal_cair','desc')->get();
+            //dd($check_list);
+            $client = new \GuzzleHttp\Client();
+            $request = $client->get('https://kalamkudus.or.id/kaskecil/api/cheque');
+            $check_list = json_decode($request->getBody()->getContents());
+            
             return view('check.index',compact('check_list'));
         }
         else {
@@ -39,17 +45,33 @@ class ChequeController extends Controller
      */
     public function create()
     {
-        $tempf = Simpanfile::where([['kode_unit',Auth::user()->kode_unit],['mode','print']])->get();
+        $tempf = Simpanfile::where('kode_unit',Auth::user()->kode_unit)->get();
+
+        if($tempf->last()->mode == 'print')
+        {
+            $tempf = $tempf->last();
+            return view('check.create',compact('tempf'));
+        }
+        else if($tempf->last()->mode == 'edit')
+        {
+            Session::flash('flash_message','Reimbursement sedang dalam mode "EDIT". Silakan selesaikan proses edit terlebih dahulu');
+            return redirect('datareim/'.str_replace(".pdf","",$tempf->last()->namafile).'/edit');
+        }
+        else if($tempf->last()->mode == 'cheque')
+        {
+            Session::flash('flash_message','Tidak ada data reimbursement yang siap untuk diinput.');
+            return redirect('cheque');   
+        }
         /*$tempf = DB::table('simpanfile')->whereNotIn('namafile', function($query){
             $query->select('datacheck.data_reimburse')->from('datacheck')->where('kode_unit',Auth::user()->kode_unit);
         })->where([['kode_unit',Auth::user()->kode_unit],['mode','print']])->get();*/
-        if($tempf->count() > 0)
+        /*if($tempf->count() > 0)
             return view('check.create',compact('tempf'));
         else
         {
-            Session::flash('flash_message','Tidak ada data reimbursement yang siap untuk diinput');
+            Session::flash('flash_message','Tidak ada data reimbursement yang siap untuk diinput atau reimburse sedang dalam mode edit.');
             return redirect('cheque');
-        }
+        }*/
     }
 
     /**
@@ -75,7 +97,8 @@ class ChequeController extends Controller
         if ($validator->fails())
         { return redirect('cheque/create')->withInput()->withErrors($validator); }
         $input['kode_unit'] = Auth::user()->kode_unit;
-        $input['data_reimburse'] = substr($input['data_reimburse'],0,23);
+        //$input['data_reimburse'] = substr($input['data_reimburse'],0,23);
+        $input['data_reimburse'] = $input['data_reimburse'];
         Cheque::create($input);
         DB::update('update simpanfile set mode = \'cheque\' where namafile = ?', [$input['data_reimburse']]);
         Session::flash('flash_message', 'Data berhasil disimpan.');
@@ -89,7 +112,7 @@ class ChequeController extends Controller
      */
     public function show($id)
     {
-        //
+        
     }
 
     /**

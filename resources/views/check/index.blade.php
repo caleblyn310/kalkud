@@ -9,17 +9,20 @@
     
     @if (!empty($check_list))
     <table class="table table-striped table-bordered table-hover table-condensed table-sm">
-        <caption style="caption-side: top; color: #171717"><strong>List of Cheque</strong></caption>
+        <caption style="caption-side: top; color: black;"><strong>List of Cheque</strong></caption>
         <thead><tr>
-            <th>Date</th><th>No. Cheque</th><th>Reimburse Data</th><th>Nominal</th><th>Action</th>
+            <th>Date</th><th>No. Cheque</th><th>Reimburse Data</th>@if(Auth::user()->kode_unit == 100)<th>Unit</th>@endif<th>Nominal</th><th style="width: 150px;">Action</th>
         </tr></thead>
         <tbody>
         <?php $total = 0 ?>
         <?php foreach ($check_list as $check) : ?>
         <tr>
-            <td>{{ $check->tanggal_cair->format('d-m-Y') }}</td>
+            <td>{{ Carbon\Carbon::parse($check->tanggal_cair)->format('d-m-Y') }}</td>
             <td>{{ $check->no_check }}</td>
             <td>{{ $check->data_reimburse }}</td>
+            @if (Auth::user()->kode_unit == 100)
+            <td>{{ App\KodeUnit::find($check->kode_unit)->middle }}</td>
+            @endif
             <td style="text-align: right">{{ number_format($check->nominal,0,",",".") }}</td>
             <td>
             @if ($check->mode == 'print')
@@ -35,8 +38,7 @@
                 @elseif (Auth::user()->kode_unit == 100 && $check->mode == 'saved')
                 Saved
                 @endif
-                    <div class="box-button">{{ link_to('storage/'.str_replace('reimburse', 'laporan', $check->data_reimburse),'',
-                    ['class'=>'btn btn-info btn-sm fa fa-print','target'=>'_blank']) }}</div>
+                    <div class="box-button">{{ link_to('http://kalamkudus.or.id/kaskecil/storage/'.str_replace('reimburse', 'reimburse', $check->data_reimburse),'',['class'=>'btn btn-info btn-sm fa fa-print','target'=>'_blank']) }}</div>
                     <div class="box-button">{{ link_to('exportExcel/'.$check->id,'',['class'=>'btn btn-success btn-sm fa fa-table']) }}</div>
             @endif
             </td>
@@ -53,4 +55,19 @@
         <p>Tidak ada data check</p>
     @endif
     </div>
+@stop
+
+@section('scripts')
+<script type="text/javascript">
+    /*$('.showDetail').click(function() {
+        $.ajax({
+            type: 'GET',
+            url: '/cheque/' + $(this).data('id'),
+            cache: false,
+            success: function(data) {
+                console.log(data);
+            }
+        })
+    });*/
+</script>
 @stop

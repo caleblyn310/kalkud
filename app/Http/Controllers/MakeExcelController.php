@@ -10,6 +10,7 @@ use App\Inventory;
 use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
 use Session;
+use App\VABCA;
 
 class MakeExcelController extends Controller
 {
@@ -57,10 +58,11 @@ class MakeExcelController extends Controller
         }
         else
         {
-            $data = DB::select(DB::raw('select * from '. $tblview .' ORDER BY subkode, tanggal_trans, no_bukti, id'));
+            $data = DB::select(DB::raw('select * from '. $tblview .' ORDER BY no_bukti, tanggal_trans, id'));
             $totalsk = DB::select(DB::raw('select subkode, SUM(nominal) as total from '.  $tblview . ' GROUP BY subkode'));
             
             $datas = [];
+            $totalnominal = 0;
 
             foreach ($data as $dt) {
                 $datas[] = array(
@@ -70,8 +72,10 @@ class MakeExcelController extends Controller
                     'Kode D-Ger' => $dt->kode_d_ger,
                     'Uraian' => $dt->deskripsi,
                     'Nominal' => $dt->nominal,
-                );}
-
+                );
+                $totalnominal += $dt->nominal;
+            }
+            $datas[] = array('','','','','Total. ', $totalnominal );
             $datas[] = array('Total per Sub Kode');
             $datas[] = array('Sub Kode','Total');
             foreach ($totalsk as $tsk) { 
@@ -140,8 +144,8 @@ class MakeExcelController extends Controller
         if($request->hasFile('filebca')){
             $dtex = [];
             $dtex[] = array('Penerimaan VA BCA '.$middle);
-            $dtex[] = array('Tanggal','NO VA BCA','Nama Siswa','Keterangan','Nominal');
-            $row = 4;
+            $dtex[] = array('No','Tanggal','NO VA BCA','Nama Siswa','Keterangan','Nominal');
+            $row = 4;$no = 1;
 
             $totaldebit = 0;
             $totalkredit = 0;
@@ -164,7 +168,7 @@ class MakeExcelController extends Controller
                 {
                     $ky = substr($datos, 19,5);
                 }
-                else if($rw >= 10 && (substr($datos, 5, 1) > 0 || substr($datos, 4, 1) > 0 ))
+                else if($rw >= 10)
                 {
                     /*if(substr($datos,0,1) != "") {
                         $row++;
@@ -174,21 +178,36 @@ class MakeExcelController extends Controller
                             'Nominal'=>ltrim(substr($datos, 47,13),"0"));
                         $totalkredit += substr($datos, 47,13);
                     }*/
-                    $row++;
-                    $nominal = str_replace(",", "", ltrim(substr($datos, 58,10)," "));
 
-                    $dtex[] = array('Tanggal' => $tdt,
-                        'No VA BCA' => $ky.substr($datos, 8,11),
-                        'Nama Siswa' => substr($datos, 28,18),
-                        'Keterangan' => substr($datos, 100,17)."|".substr($datos, 117,16),
-                        'Nominal'=> (int)$nominal);
-                    //dd($nominal);
-                    $totalkredit += (int)$nominal;
+                    $temp = VABCA::where([['dot',$tdt],['kode_unit',Auth::user()->kode_unit]])->get();
+                    
+                    while (!feof($data)) {
+                        if (substr($datos, 5, 1) > 0 || substr($datos, 4, 1) > 0 ){
+                            $row++;
+                            $nominal = str_replace(",", "", ltrim(substr($datos, 58,10)," "));
+                            if(count($temp) == 0) {
+                                $vabca = new VABCA();
+                                $vabca->dot = $tdt;
+                                $vabca->nova = $ky.substr($datos, 8,11);
+                                $vabca->nominal = $nominal;
+                                $vabca->kode_unit = Auth::user()->kode_unit;
+                                $vabca->save();
+                            }
+                            $dtex[] = array('No' => $no,
+                            'Tanggal' => $tdt,
+                            'No VA BCA' => $ky.substr($datos, 8,11),
+                            'Nama Siswa' => substr($datos, 28,18),
+                            'Keterangan' => substr($datos, 100,17)."|".substr($datos, 117,16),
+                            'Nominal'=> (int)$nominal,);$no++;
+                            $totalkredit += (int)$nominal;
+                        }
+                        $datos = fgets($data);
+                    }
                 }
             }
         }
             fclose($data);
-            $dtex[] = array('','','','Total Penerimaan',$totalkredit);
+            $dtex[] = array('','','','','Total Penerimaan',$totalkredit);
 
             /*return Excel::create('Laporan VA BCA', function($excel) use ($dtex,$row) {
             $excel->sheet('Sheet 1', function($sheet) use ($dtex,$row)
@@ -209,11 +228,12 @@ class MakeExcelController extends Controller
             return Excel::create('Laporan VA BCA', function($excel) use ($dtex,$row) {
             $excel->sheet('Sheet 1', function($sheet) use ($dtex,$row)
             {
-                $sheet->cells('A3:E3', function($cells) {$cells->setBackground('#4Cff4C');});
-                $sheet->setColumnFormat(array('E' => '#,##0'));
-                $sheet->cells('D'.$row, function($cells) {$cells->setBackground('#4Cff4C');});
-                $sheet->cells('D'.$row,function($cells) {$cells->setAlignment('right');});
-                $sheet->setBorder('A3:E'.$row,'thin');
+                $sheet->mergeCells('A2:C2');
+                $sheet->cells('A3:F3', function($cells) {$cells->setBackground('#4Cff4C');});
+                $sheet->setColumnFormat(array('F' => '#,##0'));
+                $sheet->cells('E'.$row, function($cells) {$cells->setBackground('#4Cff4C');});
+                $sheet->cells('E'.$row,function($cells) {$cells->setAlignment('right');});
+                $sheet->setBorder('A3:F'.$row,'thin');
                 $sheet->setAutoSize(true);
                 $sheet->with($dtex,null,'A1',true,false);
             });

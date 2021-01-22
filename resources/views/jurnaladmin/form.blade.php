@@ -35,7 +35,7 @@
 <div class="form-group row">
     {!! Form::label('Uraian','Deskripsi',['class'=>'col-3 form-control-label']) !!}
     <div class="col-9">
-        {!! Form::text('Uraian',null,['class'=>'form-control form-control-sm','placeholder'=>'Deskripsi','required'=>'','maxlength'=>'150']) !!}
+        {!! Form::text('Uraian',null,['class'=>'form-control form-control-sm','placeholder'=>'Deskripsi','required'=>'','maxlength'=>'255']) !!}
     </div>
 </div>
 

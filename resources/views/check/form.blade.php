@@ -33,7 +33,7 @@
 @endif
     {!! Form::label('data_reimburse','Reimburse',['class'=>'col-sm-3 form-control-label']) !!}
     <div class="col-md-8">
-        {!! Form::text('data_reimburse',!empty($cheque) ? $cheque->data_reimburse : $tempf[0]->namafile,['class'=>'form-control form-control-sm','readonly']) !!}
+        {!! Form::text('data_reimburse',!empty($cheque) ? $cheque->data_reimburse : $tempf->namafile,['class'=>'form-control form-control-sm','readonly']) !!}
     </div>
     @if ($errors->has('data_reimburse'))
             <span class="help-block">{{ $errors->first('data_reimburse') }}</span>@endif
@@ -42,7 +42,7 @@
 <div class="form-group row">
     {!! Form::label('nominal','Nominal',['class'=>'col-sm-3 form-control-label']) !!}
     <div class="col-md-8">
-        {!! Form::text('nominal',!empty($cheque) ? $cheque->nominal : $tempf[0]->nominal,['class'=>'form-control form-control-sm','placeholder'=>'Nominal',
+        {!! Form::text('nominal',!empty($cheque) ? $cheque->nominal : $tempf->nominal,['class'=>'form-control form-control-sm','placeholder'=>'Nominal',
         'required'=>'','readonly'=>'']) !!}&nbsp;<span id="errmsg"></span>
     </div>
 </div>

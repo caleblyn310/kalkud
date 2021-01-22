@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Session;
 use Response;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
 use App;
 use Validator;
@@ -14,6 +15,8 @@ use App\Invoices;
 use App\InvoicesDetail;
 use App\Bank;
 use App\InvNoTemp;
+use App\JurnalAdmin;
+use App\Bpenb;
 
 class InvoicesController extends Controller
 {
@@ -28,8 +31,17 @@ class InvoicesController extends Controller
      */
     public function index()
     {
-        $invoices_list = Invoices::orderBy('invoices_no','desc')->paginate(80);
+        $invoices_list = Invoices::orderBy('status','asc')->orderBy('dot','desc')->orderBy('invoices_no','desc')->paginate(80);
         return view('invoices.index', compact('invoices_list'));
+    }
+
+    public function testinput() 
+    {
+        $invno = Invoices::where('bank',2)->whereMonth('dot',Carbon::now()->month)->whereYear('dot', Carbon::now()->year)->get();$t = count($invno);
+        if ($t < 10) {$invno = '00' . ++$t;}
+        elseif ($t < 100) {$invno = '0' . ++$t;}
+        $bank_list = Bank::pluck('bank','id');$fs = 'new';
+        return view('testbpb', compact('bank_list','fs','invno'));
     }
 
     /**
@@ -60,8 +72,14 @@ class InvoicesController extends Controller
             $total = $invoicesdetail_list->sum('nominal');
             return view('invoices.create',compact('invoices_no','bank_list','invoicesdetail_list','total','fs'));
         }*/
+        //$bank_list = Bank::pluck('bank','id');$fs = 'new';
+        //return view('invoices.create', compact('bank_list','fs'));
+        $invno = Invoices::where('bank',1)->whereMonth('dot',Carbon::now()->month)->whereYear('dot', Carbon::now()->year)->get();$t = count($invno);
+        $invno = Bpenb::where('bank',1)->whereMonth('dot',Carbon::now()->month)->whereYear('dot', Carbon::now()->year)->get();$t += count($invno);$t++;
+        if ($t < 10) {$invno = '00' . $t;}
+        elseif ($t < 100) {$invno = '0' . $t;}
         $bank_list = Bank::pluck('bank','id');$fs = 'new';
-        return view('invoices.create', compact('bank_list','fs'));
+        return view('invoices.create', compact('bank_list','fs','invno'));
     }
 
     /**
@@ -75,14 +93,9 @@ class InvoicesController extends Controller
         $input = $request->all();
 
         $validator = Validator::make($input, [
-            'pay_to' => 'required',
-            'give_to' => 'required',
-            'nominals' => 'numeric|min:1000',
-            'invoices_no' => 'required|unique:invoices,invoices_no',
-            'dot' => 'required|before_or_equal:'.date('Y-m-d')],[
-                'pay_to.required' => 'Please input pay to field',
-                'submit_to.required' => 'Please input submit to field',
-                'dot.before_or_equal' => 'Please set the date to today or before'
+            'invoices_no' => 'required',
+            /*'dot' => 'required|before_or_equal:'.date('Y-m-d')],[
+                'dot.before_or_equal' => 'Please set the date to today or before'*/
         ]);
 
         if ($validator->fails())
@@ -91,6 +104,7 @@ class InvoicesController extends Controller
             //dd($validator->errors()->first('invoices_no'));
             return redirect('invoices/create')->withInput()->withErrors($validator); 
             //return response()->json(['errors'=>$validator->errors()->all()]);
+            //return redirect('testbpb')->withInput()->withErrors($validator); 
         }
         else
         {   
@@ -106,12 +120,30 @@ class InvoicesController extends Controller
             $inv->memo = $input['memo'];
             $inv->save();
 
+            $iddet = explode("|", $input['iddet'], -1);$chr = 65;
+            if(count($iddet) == 1) $chr = "";
+            foreach ($iddet as $i) {
+                InvoicesDetail::where('id',$i)->update(['id_invoices' => $inv->id]);
+                /*$inv_det = InvoicesDetail::findOrFail($i);
+                $ja = new JurnalAdmin();
+                $ja->No_account = $inv_det->kode_d_ger;
+                $ja->No_bukti = str_replace(")","",str_replace(" (", "", $tempinv));
+                $ja->Tanggal = $inv->dot->format('Y-m-d');
+                $ja->Uraian = $invdet->description;
+                $ja->Debet = 0;
+                $ja->Kredit = $invdet->nominal;
+                $ja->Kontra_acc = $invdet->kode_d_ger;
+                $ja->Div = $invid . "inv";
+                $ja->save();*/
+
+            }
+
             //DB::table('inv_no_temp')->where('invoices_no',$input['invoices_no'])->update(['status' => 's']);
-            DB::table('invnolist')->where('invoices_no',$input['invoices_no'])->update(['invoices_no' => $input['invoices_no']+1]);
+            //DB::table('invnolist')->where('invoices_no',$input['invoices_no'])->update(['invoices_no' => $input['invoices_no']+1]);
 
             if($request->submitbutton == 'saveprint') {
-                DB::table('invoices')->where('invoices_no',$input['invoices_no'])->update(['status' => 'p']);
-                $invid = Invoices::where('invoices_no',$input['invoices_no'])->value('id');
+                //DB::table('invoices')->where('invoices_no',$input['invoices_no'])->update(['status' => 'p']);
+                $invid = Invoices::where('id',$inv->id)->value('id');
                 return view('invoices.print',compact('invid'));
             }
 
@@ -128,7 +160,9 @@ class InvoicesController extends Controller
      */
     public function show($id)
     {
-        //
+        $invoices = Invoices::findOrFail($id);
+        $trans_list = InvoicesDetail::where('id_invoices',$id)->get();
+        return view('invoices.show', compact('invoices','trans_list'));
     }
 
     /**
@@ -146,11 +180,11 @@ class InvoicesController extends Controller
             return redirect('invoices');
         }
         $bank_list = Bank::pluck('bank','id');
-        $invoices_no = $invoices->invoices_no;
-        $invoicesdetail_list = InvoicesDetail::where('invoices_no',$invoices_no)->get();
+        $invoices_no = $invoices->invoices_no;$invno = $invoices_no;
+        $invoicesdetail_list = InvoicesDetail::where('id_invoices',$invoices->id)->get();
         $total = $invoicesdetail_list->sum('nominal');
         $fs = 'edit';
-        return view('invoices.edit',compact('invoices','invoices_no','bank_list','invoicesdetail_list','total','fs'));
+        return view('invoices.edit',compact('invoices','invoices_no','invno','bank_list','invoicesdetail_list','total','fs'));
     }
 
     /**
@@ -165,14 +199,9 @@ class InvoicesController extends Controller
         $input = $request->all();
 
         $validator = Validator::make($input, [
-            'pay_to' => 'required',
-            'give_to' => 'required',
-            'nominals' => 'numeric|min:1000',
             'invoices_no' => 'required',
-            'dot' => 'required|before_or_equal:'.date('Y-m-d')],[
-                'pay_to.required' => 'Please input pay to field',
-                'submit_to.required' => 'Please input submit to field',
-                'dot.before_or_equal' => 'Please set the date to today or before'
+            /*'dot' => 'required|before_or_equal:'.date('Y-m-d')],[
+                'dot.before_or_equal' => 'Please set the date to today or before'*/
         ]);
 
         if ($validator->fails())
@@ -181,6 +210,7 @@ class InvoicesController extends Controller
         else
         {
             $inv = Invoices::findOrFail($id);
+            $inv->invoices_no = $input['invoices_no'];
             $inv->bank = $input['bank'];
             $inv->pay_to = $input['pay_to'];
             $inv->give_to = $input['give_to'];
@@ -191,9 +221,16 @@ class InvoicesController extends Controller
             $inv->memo = $input['memo'];
             $inv->save();
 
+            if($input['iddet'] != 0 && $input['iddet'] != "") {
+                $iddet = explode("|", $input['iddet'], -1);
+                foreach ($iddet as $i) {
+                InvoicesDetail::where('id',$i)->update(['id_invoices' => $inv->id]);
+                }
+            }
+
             if($request->submitbutton == 'saveprint') {
                 //DB::table('invoices')->where('invoices_no',$input['invoices_no'])->update(['status' => 'p']);
-                $invid = Invoices::where('invoices_no',$input['invoices_no'])->value('id');
+                $invid = Invoices::where('id',$inv->id)->value('id');
                 return view('invoices.print',compact('invid'));
             }
 
@@ -211,7 +248,7 @@ class InvoicesController extends Controller
     public function destroy($id)
     {
         $temp = Invoices::findOrFail($id);
-        $t = InvoicesDetail::where('invoices_no',$temp->invoices_no);
+        $t = InvoicesDetail::where('id_invoices',$id);
         $t->delete();$temp->delete();
         return redirect('invoices');
     }
@@ -230,13 +267,40 @@ class InvoicesController extends Controller
         return Response::json(['result'=>$result]);
     }
 
+    public function getinvno(Request $request)
+    {
+        $temp = $request->all();
+        $invno = Invoices::where('bank',$temp['bank'])->whereMonth('dot',$temp['mon'])->whereYear('dot', $temp['year'])->get();$t = count($invno);
+        $invno = Bpenb::where('bank',$temp['bank'])->whereMonth('dot',$temp['mon'])->whereYear('dot', $temp['year'])->get();$t += count($invno);$t++;
+        if ($t < 10) {$invno = '00' . $t;}
+        elseif ($t < 100) {$invno = '0' . $t;}
+        return Response::json(['invno' => $t]);
+    }
+
+    public function cancelprint($id)
+    {
+        if(substr($id, -3) == "inv")
+        {
+            JurnalAdmin::where('Div',$id)->delete();
+            $id = str_replace("inv", "", $id);
+            Invoices::where('id',$id)->update(['status'=>'s']);
+        }
+        else if(substr($id, -3) == "bpn")
+        {
+            JurnalAdmin::where('Div',$id)->delete();
+            $id = str_replace("bpn", "", $id);
+            Bpenb::where('id',$id)->update(['status'=>'s']);
+        }
+    }
+
     public function printing($invid)
     {
         ob_end_clean();
         ob_start();
         $inv = Invoices::findOrFail($invid);
         $bank = Bank::findOrFail($inv->bank);
-        $invdets = InvoicesDetail::where('invoices_no',$inv->invoices_no)->get();
+        $invdets = InvoicesDetail::where('id_invoices',$inv->id)->get();
+        $invstatus = $inv->status;
 
         //PDF Version
         /*$td = '<style>html {margin-top;0px;} table {font-family: arial, sans-serif;font-size:90%;width: 100%;border-collapse:collapse;}';
@@ -272,24 +336,69 @@ class InvoicesController extends Controller
         $pdf->save('storage/'.$inv->invoices_no);
         return $pdf->stream('storage/'.$inv->invoices_no);*/
         
-        //Continues form version
-        /*$t = 0;
-        $dt = "\n" . str_pad('INVOICE', 76, ' ', STR_PAD_BOTH) . "\n";
-        $dt .= str_pad("Pay To: ".$inv->pay_to,60,' ',STR_PAD_RIGHT);
+        //*********************************************Continues form version (input program)
+        /*$t = 1;$chr = 65;$detcount = count($invdets);
+        $dt = "\n" . str_pad('Bukti Pengeluaran Bank', 76, ' ', STR_PAD_BOTH) . "\n\n";
+        $dt .= "NO: ".$inv->invoices_no." (".$bank->bank.")\n";
+        $dt .= str_pad("Dibayarkan kpd: ".$inv->pay_to,60,' ',STR_PAD_RIGHT);
         $dt .= str_pad($inv->dot->format('d F Y'),16,' ',STR_PAD_LEFT)."\n";
-        $dt .= str_pad("Give To: ".$inv->give_to,44,' ',STR_PAD_RIGHT);
-        $dt .= "Invoices NO: ".$inv->invoices_no." (".$bank->bank.")\n";
+        $dt .= str_pad("Diberikan kpd: ".$inv->give_to,70,' ',STR_PAD_RIGHT)."\n";
         $dt .= "- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -\n";
-        $dt .= str_pad('Description', 60) . '| ' . str_pad('Nominal', 15, ' ', STR_PAD_LEFT) . "\n";
+        $dt .= str_pad('Keterangan', 62) . '| ' . str_pad('Nominal (IDR)', 13, ' ', STR_PAD_LEFT) . "\n";
         $dt .= "- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -\n";
         foreach ($invdets as $invdet) {
-            $dt .= str_pad($invdet->description, 60) . '| ' . str_pad(number_format($invdet->nominal,0,",","."),15,' ',STR_PAD_LEFT);
-            $dt .= "\n";
-            $t++;
+            //$dt .= str_pad($invdet->description, 62) . '| ' . str_pad(number_format($invdet->nominal,0,",","."),13,' ',STR_PAD_LEFT);
+            //$dt .= "\n";
+            //$t++;
+            $ts = $invdet->description;
+            $result = ''; $cpl = 50;
+            if($detcount > 1) {
+                $tempinv = " (".$inv->invoices_no.chr($chr)."/".$bank->middle."-". $inv->dot->format('m/y') .")";
+                $ts .= $tempinv; $chr++;
+            }
+            else {
+                $tempinv = " (".$inv->invoices_no."/".$bank->middle."-". $inv->dot->format('m/y') .")";
+                $ts .= $tempinv;}
+            
+            if (strlen($ts) > $cpl){
+                $z = 0;
+                while (strlen($ts) > $cpl) {
+                    $substr = str_limit($ts,$cpl,'');
+                    $y = strripos($substr,' ');
+                    $ts = substr($ts, $y+1);
+                    $substr = substr($substr, 0, $y);   
+                    if($z == 0 && $invdet->kode_d_ger != "") {$dt .= $invdet->kode_d_ger . "|";}
+                    else { $dt .= "          |"; }
+                    $dt .= str_pad($substr, 51) . "|";
+                    if ($z == 0){$dt .= str_pad(number_format($invdet->nominal,0,",","."),14,' ',STR_PAD_LEFT);$z=1;}
+                    $dt .= "\n";
+                    $t++;
+                }
+                $dt .= "          |" . str_pad($ts, 51) . "|" . "\n"; 
+            }
+            else{
+                if($invdet->kode_d_ger != "") { $dt .= $invdet->kode_d_ger . "|"; }
+                else { $dt .= "          |"; }
+                $dt .= str_pad($ts, 51) . "|" . str_pad(number_format($invdet->nominal,0,",","."),14,' ',STR_PAD_LEFT);
+                $dt .= "\n";
+                $t++;}
+
+            //If the status of the transaction is 's' then save the transaction to d-ger.jurnal_admin
+            if($invstatus == 's') {
+            $ja = new JurnalAdmin();
+            $ja->No_account = $bank->kode_d_ger2;
+            $ja->No_bukti = str_replace(")","",str_replace(" (", "", $tempinv));
+            $ja->Tanggal = $inv->dot->format('Y-m-d');
+            $ja->Uraian = $invdet->description;
+            $ja->Debet = 0;
+            $ja->Kredit = $invdet->nominal;
+            $ja->Kontra_acc = $invdet->kode_d_ger;
+            $ja->Div = $invid . "inv";
+            $ja->save();}
         }
-        for ($i=$t; $i <= 10 ; $i++) {$dt .= "\n";}
+        for ($i=$t; $i < 10 ; $i++) {$dt .= "\n";}
         $dt .= "- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -\n";
-        $dt .= str_pad('Total Rp.', 60, ' ', STR_PAD_LEFT) . '| ' . str_pad(number_format($inv->nominal,0,",","."),15,' ',STR_PAD_LEFT);
+        $dt .= str_pad('Total Rp.', 62, ' ', STR_PAD_LEFT) . '|' . str_pad(number_format($inv->nominal,0,",","."),14,' ',STR_PAD_LEFT);
         $dt .= "\n\n" . str_pad('Submit By', 25, ' ', STR_PAD_BOTH) . str_pad('Receive By', 25, ' ', STR_PAD_BOTH);
         $dt .= str_pad('Known By', 25, ' ', STR_PAD_BOTH);
         $dt .= Chr(13) . Chr(10) . Chr(13) . Chr(10) . Chr(13) . Chr(10) . Chr(13) . Chr(10);
@@ -298,19 +407,20 @@ class InvoicesController extends Controller
         $dt .= str_pad("(" . str_pad('.', 20 ,'.') . ")",25, ' ', STR_PAD_BOTH) . "\n";
         $dt = Chr(27) . Chr(69) . Chr(1) . $dt . Chr(27) . Chr(69) . Chr (0);
 
-        if($inv->status != 'p') {
-            DB::table('invoices')->where('invoices_no',$inv->invoices_no)->update(['status' => 'p']);
+        if($inv->status == 's') {
+            DB::table('invoices')->where('id',$inv->id)->update(['status' => 'p']);
         }
-        else { $dt .= str_pad('reprint',76, ' ', STR_PAD_LEFT) . "\n"; }
+        else { $dt .= str_pad('',76, ' ', STR_PAD_LEFT) . "\n"; }
+        $dt .= Chr(12);
         return $dt;*/
 
-        //Existing form version
+        //***********************************Existing form version
         $t = 0;$cpl = 38;
-        $dt = "\n\n\n\n            " . $bank->bank;
-        if($inv->status == 'p' || $inv->status == 'dg') { $dt .= str_pad('reprint',60, ' ', STR_PAD_LEFT); }
-        else { DB::table('invoices')->where('invoices_no',$inv->invoices_no)->update(['status' => 'p']); }
+        $dt = "\n\n\n          " . $bank->bank;
+        if($inv->status == 'p' || $inv->status == 'dg') { $dt .= str_pad("No: " . $inv->invoices_no.'(reprint)',41, ' ', STR_PAD_LEFT); }
+        else { $dt .= str_pad("No: ".$inv->invoices_no,41, ' ', STR_PAD_LEFT);}
         $dt .= "\n\n";
-        $dt .= "                  " . $inv->pay_to . "\n";
+        $dt .= "                " . $inv->pay_to . "\n\n";
         $ts = $inv->give_to;$z = 0;
         if (strlen($ts) > $cpl){
             while (strlen($ts) > $cpl) {
@@ -318,27 +428,35 @@ class InvoicesController extends Controller
                 $y = strripos($substr,' ');
                 $ts = substr($ts, $y+1);
                 $substr = substr($substr, 0, $y);
-                $dt .= "                  " . str_pad($substr,38, " ", STR_PAD_RIGHT);
+                $dt .= "                " . str_pad($substr,38, " ", STR_PAD_RIGHT);
                 if ($z == 0) { $dt .= "      " . $inv->dot->format('d F Y'); $z++;}
                 $dt .= "\n";
             }
-            $dt .= "                  " . $ts . "\n\n\n";
+            $dt .= "                " . $ts . "\n\n\n";
         }
         else {
-            $dt .= "                  " . str_pad($inv->give_to,38, ' ', STR_PAD_RIGHT);
+            $dt .= "                " . str_pad($inv->give_to,38, ' ', STR_PAD_RIGHT);
             $dt .= "      " . $inv->dot->format('d F Y') . "\n\n\n\n";
         }
 
-        $expmemo = explode("\r\n", $inv->memo);
+        /*$expmemo = explode("\r\n", $inv->memo);
         for ($i=0; $i < count($expmemo); $i++) { 
             $dt .= "           " . $expmemo[$i] . "\n";
-        }
+        }*/
 
-        $t += count($expmemo);
+        //$t += count($expmemo);
+        $detcount = count($invdets);$chr = 65;
 
         foreach ($invdets as $invdet) {
-            $ts = $invdet->description;
+            $ts = $invdet->description;$tempinv = "";
             $result = ''; $cpl = 50;
+            if($detcount > 1) {
+                $tempinv = $inv->invoices_no.chr($chr)."/".$bank->middle."-". $inv->dot->format('m/y') ;
+                $ts .= " (". $tempinv .")"; $chr++;
+            }
+            else {
+                $tempinv = $inv->invoices_no."/".$bank->middle."-". $inv->dot->format('m/y');
+                $ts .= " (". $tempinv .")";}
             
             if (strlen($ts) > $cpl){
                 $z = 0;
@@ -359,15 +477,28 @@ class InvoicesController extends Controller
             else{
                 if($invdet->kode_d_ger != "") { $dt .= $invdet->kode_d_ger . "|"; }
                 else { $dt .= "           "; }
-                $dt .= str_pad($invdet->description, 52) . str_pad(number_format($invdet->nominal,0,",","."),13,' ',STR_PAD_LEFT);
+                $dt .= str_pad($ts, 52) . str_pad(number_format($invdet->nominal,0,",","."),13,' ',STR_PAD_LEFT);
                 $dt .= "\n";
                 $t = $t + 1;}
+
+            //If the status of the transaction is 's' then save the transaction to d-ger.jurnal_admin
+            if($invstatus == 's') {
+            $ja = new JurnalAdmin();
+            $ja->No_account = $bank->kode_d_ger2;
+            $ja->No_bukti = $tempinv;
+            $ja->Tanggal = $inv->dot->format('Y-m-d');
+            $ja->Uraian = $invdet->description;
+            $ja->Debet = 0;
+            $ja->Kredit = $invdet->nominal;
+            $ja->Kontra_acc = $invdet->kode_d_ger;
+            $ja->Div = $invid . "inv";
+            $ja->save();}
         }
         
         //$dt .= "           " . $inv->memo;
 
         for ($i=$t; $i <= 15 ; $i++) {$dt .= "\n";}
-        $dt .= str_pad('Total Rp.', 65, ' ', STR_PAD_LEFT) . str_pad(number_format($inv->nominal,0,",","."),13,' ',STR_PAD_LEFT);
+        $dt .= str_pad('Total Rp.', 62, ' ', STR_PAD_LEFT) . str_pad(number_format($inv->nominal,0,",","."),13,' ',STR_PAD_LEFT);
         //$dt = Chr(27) . Chr(69) . Chr(1) . $dt . Chr(27) . Chr(69) . Chr (0);
 
         $dt .= "\n";
@@ -391,6 +522,9 @@ class InvoicesController extends Controller
         else { $dt .= "     " . $ts . "\n"; }
 
         $dt .= Chr(12);
+
+        if ($invstatus == 's') {DB::table('invoices')->where('id',$inv->id)->update(['status' => 'p']); }
+                
         return $dt;
     }
 }

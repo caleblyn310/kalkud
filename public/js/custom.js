@@ -28,7 +28,7 @@ $(document).ready(function () {
     //called when key is pressed in textbox
     $("#nominal,#debet").keypress(function (e) {
         //if the letter is not digit then display error and don't type anything
-        if (e.which != 8 && e.which != 0 && (e.which < 48 || e.which > 57)) {
+        if (e.which != 8 && e.which != 0 && e.which != 46 && (e.which < 48 || e.which > 57)) {
             //display error message
             $("#errmsg").html("Hanya boleh angka").show().fadeOut(3000);
             return false;
@@ -124,7 +124,7 @@ $(document).ready(function () {
         }
     });
 
-    $('div.alert').not('.alert-important').delay(2500).slideUp(200);
+    $('div.alert').not('.alert-important').delay(3500).slideUp(200);
 
     //MenuCheque
     $('#mnCheque').click(function () {
@@ -171,16 +171,16 @@ $(document).ready(function () {
             success: function (data) {
                 fn = data[0].namafile;
                 md = data[0].mode;
-
+                //alert(fn);
                 if (md == 'print') {
                     ans = confirm('Apakah Anda yakin hendak melakukan EDIT?');
                 }
 
                 if (ans) {
                     if(host.includes('localhost')) 
-                        window.open('/datareim/' + fn.slice(0,19).trim() + '/edit','_self');
+                        window.open('/datareim/' + fn.replace(".pdf","") + '/edit','_self');
                     else
-                        window.open('/kaskecil/datareim/' + fn.slice(0,19).trim() + '/edit', '_self');
+                        window.open('/kaskecil/datareim/' + fn.replace(".pdf","") + '/edit', '_self');
                 }
             }
         });

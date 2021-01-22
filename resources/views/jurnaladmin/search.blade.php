@@ -4,12 +4,11 @@
     <div class="container">
         @include('_partial.flash_message')<br>
         {!! Form::open(['url'=>'search/transaction','method'=>'GET', 'class'=>'']) !!}
-        <div class="form-group row">
+        <div class="form-group row" style="background-color: #eef9fd; padding: 10px 0px 10px 0px;">
             <strong class="col-md-2">{!! Form::label('no_bukti','Search Inv. No.',['class'=>'form-control-label','style'=>'color:black;']) !!}</strong>
             <div class="col-md-10 form-inline">
-                {!! Form::text('No_bukti',null,['class'=>'form-control form-control-sm','placeholder'=>'No Bukti yang ingin dicari','required'=>'','maxlength'=>'150','id'=>'qsearch']) !!}&nbsp;{!! Form::submit('Search',['class'=>'btn btn-sm btn-primary']) !!}
+                {!! Form::text('No_bukti',null,['class'=>'form-control form-control-sm','placeholder'=>'No Bukti yang ingin dicari','required'=>'','maxlength'=>'150','id'=>'qsearch']) !!}&nbsp;&nbsp;&nbsp;{!! Form::submit('Search',['class'=>'btn btn-sm btn-primary']) !!}
             </div>
-            
         </div>
         {!! Form::close() !!}
     </div>

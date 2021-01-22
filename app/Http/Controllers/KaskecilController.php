@@ -10,12 +10,14 @@ use App\Kaskecil;
 use App\Cheque;
 use App\Simpanfile;
 use App\KodeUnit;
+use App\AccNum;
 use Session;
 use PDF;
 use App;
 use DB;
 use Carbon\Carbon;
 use View;
+use Response;
 
 class KaskecilController extends Controller
 {
@@ -30,23 +32,34 @@ class KaskecilController extends Controller
             return redirect('invoices');
         }
         else if(Auth::user()->kode_unit < 50) {*/
-        $kaskecil_list = Kaskecil::where([['kode_unit', Auth::user()->kode_unit], ['status', 'bu']])
-            ->orderBy('no_bukti')->orderBy('tanggal_trans')->orderBy('id');
-            
-        $totalreim = $kaskecil_list->sum('nominal');
-        $kaskecil_list = $kaskecil_list->paginate(15);
+
+        if(Auth::user()->kode_unit == 100) {
+            $client = new \GuzzleHttp\Client();
+            $request = $client->get('https://kalamkudus.or.id/kaskecil/api/kaskecil');
+            $kaskecil_list = json_decode($request->getBody()->getContents());
+            $kode_unit = collect($kaskecil_list)->unique('kode_unit');
+            $groupKaskecil = collect($kaskecil_list)->groupBy('kode_unit')->toArray();
+
+            return view('kaskecil.index',compact('kaskecil_list','kode_unit','groupKaskecil'));
+        }
+        else{
+                $kaskecil_list = Kaskecil::where([['kode_unit', Auth::user()->kode_unit], ['status', 'bu']])
+                    ->orderBy('no_bukti')->orderBy('tanggal_trans')->orderBy('id');
+                    
+                $totalreim = $kaskecil_list->sum('nominal');
+                $kaskecil_list = $kaskecil_list->paginate(15);
+                
+                $plafon = DB::table('kodeunit')->where('id', Auth::user()->kode_unit)->value('plafon');
         
-        $plafon = DB::table('kodeunit')->where('id', Auth::user()->kode_unit)->value('plafon');
-
-        $reimburse = DB::table('simpanfile')->where('kode_unit',Auth::user()->kode_unit)->whereNotIn('mode',['final','cheque'])->get();
-        //dd(count($reimburse));
-        (count($reimburse)>0) ? $reimburse = $reimburse[0]->namafile . '|' . $reimburse[0]->mode : $reimburse = '' ;
-        $totalcoa = Kaskecil::select(DB::raw('kode_d_ger, SUM(nominal) as total'))
-            ->where([['status','bu'],['kode_unit',Auth::user()->kode_unit]])->groupBy('kode_d_ger')->get();
-
-        $totalsk = Kaskecil::select(DB::raw('subkode, SUM(nominal) as total'))
-            ->where([['status','bu'],['kode_unit',Auth::user()->kode_unit]])->groupBy('subkode')->get();
-        return view('kaskecil.index', compact('kaskecil_list', 'plafon', 'totalreim','reimburse','totalcoa','totalsk'));
+                $reimburse = DB::table('simpanfile')->where('kode_unit',Auth::user()->kode_unit)->whereNotIn('mode',['final','cheque'])->get();
+                //dd(count($reimburse));
+                (count($reimburse)>0) ? $reimburse = $reimburse[0]->namafile . '|' . $reimburse[0]->mode : $reimburse = '' ;
+                $totalcoa = Kaskecil::select(DB::raw('kode_d_ger, SUM(nominal) as total'))
+                    ->where([['status','bu'],['kode_unit',Auth::user()->kode_unit]])->groupBy('kode_d_ger')->get();
+        
+                $totalsk = Kaskecil::select(DB::raw('subkode, SUM(nominal) as total'))
+                    ->where([['status','bu'],['kode_unit',Auth::user()->kode_unit]])->groupBy('subkode')->get();
+                return view('kaskecil.index', compact('kaskecil_list', 'plafon', 'totalreim','reimburse','totalcoa','totalsk'));}
         /*}
         else if(Auth::user()->kode_unit == 100) {
             $check_list = Cheque::where([['mode','!=','print'],['id','>',10]])->orderBy('tanggal_cair','desc')->get();
@@ -60,7 +73,15 @@ class KaskecilController extends Controller
     public function create()
     {
         //$list_unit = KodeUnit::pluck('unit','id');
-        return view('kaskecil.create');
+        $kaskecil_list = Kaskecil::where([['kode_unit', Auth::user()->kode_unit], ['status', 'bu']])
+                    ->orderBy('no_bukti')->orderBy('tanggal_trans')->orderBy('id');
+                    
+        $totalreim = $kaskecil_list->sum('nominal');
+        
+        $plafon = DB::table('kodeunit')->where('id', Auth::user()->kode_unit)->value('plafon');
+
+        $sisaSaldo = $plafon - $totalreim;
+        return view('kaskecil.create',compact("sisaSaldo"));
     }
 
     public function store(Request $request)
@@ -85,7 +106,14 @@ class KaskecilController extends Controller
 
     public function edit(Kaskecil $kaskecil)
     {
-        return view('kaskecil.edit',compact('kaskecil'));
+        $kaskecil_list = Kaskecil::where([['kode_unit', Auth::user()->kode_unit], ['status', 'bu']])
+                    ->orderBy('no_bukti')->orderBy('tanggal_trans')->orderBy('id');
+                    
+        $totalreim = $kaskecil_list->sum('nominal');
+        
+        $plafon = DB::table('kodeunit')->where('id', Auth::user()->kode_unit)->value('plafon');
+        $sisaSaldo = $plafon - $totalreim + $kaskecil->nominal;
+        return view('kaskecil.edit',compact('kaskecil','sisaSaldo'));
     }
 
     public function update(Kaskecil $kaskecil,Request $request)
@@ -124,6 +152,79 @@ class KaskecilController extends Controller
             return view('kaskecil.search',compact('kaskecil'));
         }
         return view('kaskecil.search');
+    }
+
+    public function transactions()
+    {
+        return view('kaskecil.transactions');
+    }
+
+    public function laporanKasAdmin(Request $request)
+    {
+        $input = $request->all();//dd($input);
+
+        $sk_list = Kaskecil::where([['subkode','!=',''],['kode_unit',Auth::user()->kode_unit]])->distinct('subkode')->orderByRaw('LENGTH(subkode)', 'ASC')->orderBy('subkode')->pluck('subkode','subkode');
+        $sk_list = $sk_list->toArray();
+        $sk_list['0'] = "Semua";
+        $coa_list = AccNum::where([['status',Auth::user()->kode_unit],['accnum_id','NOT LIKE','111.%'],['accnum_id','NOT LIKE','415.%']])->orderBy('accnum_id')->pluck('accnum_id','accnum_id');
+        //$coa_list['0'] = 'Semua';
+        $coa_list = $coa_list->toArray();
+        array_unshift($coa_list, "Semua");
+        //dd($sk_list);
+        //dd($sk_list);
+        if(!empty($input)) {
+            $dt1 = $input['tanggal1'];
+            $dt2 = $input['tanggal2'];
+            
+
+            $validator = Validator::make($input, [
+                'tanggal2' => 'required|before_or_equal:'.date('Y-m-d'),
+                'tanggal1' => 'required|before:'.$dt2],[
+                    'subkode.required' => 'Sub Kode belum di pilih',
+                    'tanggal2.required' => 'Tanggal2 belum di input',
+                    'tanggal2.before_or_equal' => 'Tanggal2 harus sebelum / sama dengan hari ini',
+                    'tanggal1.required' => 'Tanggal1 belum di input',
+                    'tanggal1.before' => 'Tanggal1 harus sebelum Tanggal2'
+            ]);
+
+            if ($validator->fails())
+                {   
+                    Session::flash('flash_message','Silakan set tanggal dengan benar. Tidak bisa lebih dari hari ini.');
+                    return redirect('kaskecil/laporan');}
+
+            $transactions = ''; $kategori = $input['kategori'];
+            
+            if($kategori == '1') { $sk = $input['subkode']; 
+                if($sk == '0') {
+                    $transactions = Kaskecil::where([['tanggal_trans','>=',$dt1],['tanggal_trans','<=',$dt2],['subkode','!=',null],['subkode','!=',''],['kode_unit',Auth::user()->kode_unit]])->orderByRaw('LENGTH(subkode)','ASC')->orderBy('subkode')->orderBy('tanggal_trans')->get();
+    
+                    $totalsk = Kaskecil::select(DB::raw('subkode as sub, SUM(nominal) as total'))
+                            ->where([['tanggal_trans','>=',$dt1],['tanggal_trans','<=',$dt2],['subkode','!=',null],['subkode','!=',''],['kode_unit',Auth::user()->kode_unit]])->orderByRaw('LENGTH(subkode)','ASC')->orderBy('subkode')->groupBy('subkode')->get();
+                    $sk = '1|0';
+                    return view('kaskecil.laporan',compact('transactions','totalsk','sk_list','coa_list','sk'));
+                }
+                else if($sk != null){
+                    $transactions = Kaskecil::where([['tanggal_trans','>=',$dt1],['tanggal_trans','<=',$dt2],['subkode',$sk],['kode_unit',Auth::user()->kode_unit]])->orderBy('subkode')->orderBy('tanggal_trans')->get();
+                    $sk = '1|' . $sk;
+                    return view('kaskecil.laporan', compact('transactions','sk_list','coa_list','sk'));
+            }}
+            else if($kategori == '0') { $coa = $input['coa'];
+                if($coa == '0') {
+                    $transactions = Kaskecil::where([['tanggal_trans','>=',$dt1],['tanggal_trans','<=',$dt2],['kode_unit',Auth::user()->kode_unit]])->orderBy('kode_d_ger')->orderBy('tanggal_trans')->get();
+    
+                    $totalsk = Kaskecil::select(DB::raw('kode_d_ger as sub, SUM(nominal) as total'))
+                            ->where([['tanggal_trans','>=',$dt1],['tanggal_trans','<=',$dt2],['kode_unit',Auth::user()->kode_unit]])->groupBy('kode_d_ger')->get();
+                    $sk = '0|0';
+                    return view('kaskecil.laporan',compact('transactions','totalsk','sk_list','coa_list','sk'));
+                }
+                else if($coa != null) {
+                    $transactions = Kaskecil::where([['tanggal_trans','>=',$dt1],['tanggal_trans','<=',$dt2],['kode_d_ger',$coa],['kode_unit',Auth::user()->kode_unit]])->orderBy('kode_d_ger')->orderBy('tanggal_trans')->get();
+                    $sk = '0|' . $coa; $judul = $coa;
+                    return view('kaskecil.laporan', compact('transactions','sk_list','coa_list','sk','judul'));
+            }}
+
+        }
+        return view('kaskecil.laporan',compact('sk_list','coa_list'));
     }
 
     public function mPDFGen($mode)
@@ -193,7 +294,7 @@ class KaskecilController extends Controller
             $tempd = DB::connection('mysql3')->select('select * from datacheck where id = ?',[$mode]);
             foreach ($tempd as $t) {
                 $mode = substr($t->data_reimburse,0,-4);
-                $items = DB::select(DB::raw("select * from $mode ORDER BY kode_d_ger, tanggal_trans, no_bukti, id"));
+                $items = DB::select(DB::raw("select * from $mode ORDER BY no_bukti, tanggal_trans, id"));
                 $totalcoa = DB::select(DB::raw("select kode_d_ger, SUM(nominal) as total from $mode GROUP BY kode_d_ger"));
                 $totalsk = DB::select(DB::raw('select subkode, SUM(nominal) as total from '.  $mode . ' GROUP BY subkode'));
                 $tempper = DB::select(DB::raw("select MIN(tanggal_trans) as perawal, MAX(tanggal_trans) as perakhir from $mode"));
@@ -253,8 +354,7 @@ class KaskecilController extends Controller
                 $td .= '<td>'.$item->subkode.'</td>';
                 $td .= '<td>'.$item->no_bukti.'</td>';
                 $td .= '<td style="text-align:left;">'.$item->deskripsi.'</td>';
-                $td .= '<td style="text-align: right;">'
-                    .number_format($item->nominal,0,'','.').',00</td>';
+                $td .= '<td style="text-align: right;">'.number_format($item->nominal,0,'','.').',00</td>';
                 $td .= '</tr>';$total += $item->nominal;
             }}
             else if (str_contains($mode,'req')) {
@@ -265,8 +365,7 @@ class KaskecilController extends Controller
                 $td .= '<td>'.$item->subkode.'</td>';
                 $td .= '<td>'.$item->no_bukti.'</td>';
                 $td .= '<td style="text-align:left;">'.$item->deskripsi.'</td>';
-                $td .= '<td style="text-align: right;">'
-                    .number_format($item->nominal,0,'','.').',00</td>';
+                $td .= '<td style="text-align: right;">'.number_format($item->nominal,0,'','.').',00</td>';
                 $td .= '</tr>';$total += $item->nominal;
             }}
             $td .= '<tr><td colspan="5" style="text-align: right;">Total</td>';
@@ -367,12 +466,17 @@ class KaskecilController extends Controller
             $pdf->save('storage/'.$tf);
             return redirect('kaskecil');}
         else if (!str_contains($mode,'laporan'))
-        {   $tf = $mode.'.pdf';
-            DB::table('simpanfile')->where('namafile','LIKE',$mode.'%')
-                ->update(['mode'=>'print','updated_at'=>date("Y-m-d H:i:s"),'nominal'=>$total]);
+        {   //$tf = $mode.'.pdf';
+            $status = DB::select(DB::raw("select distinct(status) from $mode"));
+            $dr_new = 'reimburse'.date('dmYHi').'u'.Auth::user()->kode_unit;
+            DB::statement("drop view $mode");
+            DB::statement('create view '.$dr_new.' as select * from kaskecil WHERE status = \'' . $status[0]->status . '\'');
+            Simpanfile::where('namafile','LIKE',$mode.'%')->update(['namafile' => $dr_new.'.pdf','mode'=>'print','nominal'=>$total]);
+            //DB::table('simpanfile')->where('namafile','LIKE',$mode.'%')
+            //    ->update(['mode'=>'print','updated_at'=>date("Y-m-d H:i:s"),'nominal'=>$total]);
             Session::flash('flash_message','Request berhasil disimpan.');
             //return $pdf->stream($tf);
-            $pdf->save('storage/'.$tf);
+            $pdf->save('storage/'.$dr_new.'.pdf');
             return redirect('kaskecil');}
         else {
             $dr = str_replace('laporan','',$mode);
@@ -380,13 +484,129 @@ class KaskecilController extends Controller
             DB::table('laporanfile')->insert(['namafile'=>$tf,'data_reimburse'=>$dr,'kode_unit'=>Auth::user()->kode_unit]);
             Cheque::where('data_reimburse','LIKE','%'.$dr.'%')->update(['mode'=>'final']);
             Session::flash('flash_message','Laporan berhasil disimpan');
+            Simpanfile::where('namafile',$dr)->update(['mode' => 'cheque']);
             //return $pdf->stream($tf);
             $pdf->save('storage/'.$tf);
             return redirect('cheque');
         }
     }
 
-    public function requestreimburse($mode)
+    public function laporankampdf(Request $request)
+    {
+        ob_end_clean();
+        ob_start();
+
+        $input = $request->all();
+        
+        if(!empty($input)) {
+            $dt1 = $input['tanggal1'];
+            $dt2 = $input['tanggal2'];
+
+            $transactions = '';
+            
+            /*if($input['subkode'] == '0') {
+                $transactions = Kaskecil::where([['tanggal_trans','>=',$dt1],['tanggal_trans','<=',$dt2],['subkode','!=',null],['subkode','!=',''],['kode_unit',Auth::user()->kode_unit]])->orderBy('subkode')->orderBy('tanggal_trans')->get();
+
+                $totalsk = Kaskecil::select(DB::raw('subkode, SUM(nominal) as total'))
+                        ->where([['tanggal_trans','>=',$dt1],['tanggal_trans','<=',$dt2],['subkode','!=',null],['kode_unit',Auth::user()->kode_unit]])
+                        ->groupBy('subkode')->get();
+            }
+            else {
+                $transactions = Kaskecil::where([['tanggal_trans','>=',$dt1],['tanggal_trans','<=',$dt2],['subkode',$input['subkode']],['kode_unit',Auth::user()->kode_unit]])->orderBy('subkode')->orderBy('tanggal_trans')->get();                
+            }
+*/
+            $transactions = ''; $kategori = explode("|",$input['subkode'])[0];
+            
+            if($kategori == '1') { $sk = explode("|",$input['subkode'])[1];
+                if($sk == '0') {
+                    $transactions = Kaskecil::where([['tanggal_trans','>=',$dt1],['tanggal_trans','<=',$dt2],['subkode','!=',null],['subkode','!=',''],['kode_unit',Auth::user()->kode_unit]])->orderBy('subkode')->orderBy('tanggal_trans')->get();
+    
+                    $totalsk = Kaskecil::select(DB::raw('subkode as sub, SUM(nominal) as total'))
+                            ->where([['tanggal_trans','>=',$dt1],['tanggal_trans','<=',$dt2],['subkode','!=',null],['subkode','!=',''],['kode_unit',Auth::user()->kode_unit]])
+                            ->groupBy('subkode')->get();
+                }
+                else if($sk != null){
+                    $transactions = Kaskecil::where([['tanggal_trans','>=',$dt1],['tanggal_trans','<=',$dt2],['subkode',$sk],['kode_unit',Auth::user()->kode_unit]])->orderBy('subkode')->orderBy('tanggal_trans')->get();
+            }}
+            else if($kategori == '0') { $coa = explode("|",$input['subkode'])[1];
+                if($coa == '0') {
+                    $transactions = Kaskecil::where([['tanggal_trans','>=',$dt1],['tanggal_trans','<=',$dt2],['kode_unit',Auth::user()->kode_unit]])->orderBy('kode_d_ger')->orderBy('tanggal_trans')->get();
+    
+                    $totalsk = Kaskecil::select(DB::raw('kode_d_ger as sub, SUM(nominal) as total'))
+                            ->where([['tanggal_trans','>=',$dt1],['tanggal_trans','<=',$dt2],['kode_unit',Auth::user()->kode_unit]])->groupBy('kode_d_ger')->get();
+                }
+                else if($coa != null) {
+                    $transactions = Kaskecil::where([['tanggal_trans','>=',$dt1],['tanggal_trans','<=',$dt2],['kode_d_ger',$coa],['kode_unit',Auth::user()->kode_unit]])->orderBy('kode_d_ger')->orderBy('tanggal_trans')->get();
+            }}
+
+            $td = '<style>html {margin-top:20px;} table {font-family: arial, sans-serif;font-size:70%;border-collapse: collapse;width: 100%;}';
+            $td .= 'td, th {border: 1px solid; text-align: center;padding: 2px;}';
+            $td .= 'tr:nth-child(even) {background-color: #dddddd;} @page {header: page-header;footer: page-footer;}</style>';
+            $td .= '<body><htmlpageheader name="page-header"><H4>Rekap Kas Admin '. KodeUnit::where('id',Auth::user()->kode_unit)->value('unit') .' - ('.$dt1.' - '.$dt2.')</H4></htmlpageheader>';
+
+            $td .= '<table align="center"><thead>';
+
+            $td .= '<tr><th>Tanggal</th><th>Kode D-Ger</th><th>Sub<br>Kode</th><th>No BPU</th><th style="width: 63%;">Deskripsi</th><th>Nominal</th></tr></thead><tbody>';
+
+            $totalnominal = 0;
+            foreach ($transactions as $trans) {
+            $td .= '<tr>';
+            $td .= '<td>' . Carbon::parse($trans->tanggal_trans)->format('d/m/Y') . '</td>';
+            $td .= '<td>' . $trans->kode_d_ger . '</td>';
+            $td .= '<td>' . $trans->subkode . '</td>';
+            $td .= '<td>' . $trans->no_bukti . '</td>';
+            $td .= '<td style="text-align: left;">' . $trans->deskripsi . '</td>';
+            $td .= '<td style="text-align: right;">' . number_format($trans->nominal,0,'.',',') . '</td>';
+            $td .= '</tr>';$totalnominal+= $trans->nominal;
+            }
+            $td .= '<tr>';
+            $td .= '<td colspan="5" style="text-align: right;"><strong>TOTAL</strong></td>';
+            $td .= '<td style="text-align: right;">' . number_format($totalnominal,0,'.',',') . '</td></tr>';
+            $td .= '<tr><td colspan="6" style="text-align: center;background-color: grey;"></td></tr>';
+
+            if(explode("|",$input['subkode'])[1] == '0'){
+                if(explode("|",$input['subkode'])[0] == '1'){
+                    $td .= '<tr><td colspan="6" style="text-align: center;"><strong>Jumlah per SUB Kode</strong></td></tr>';
+                    $td .= '<tr><td colspan="5" style="text-align: right;"><strong>Sub Kode</strong></td>';
+                }
+                else {
+                    $td .= '<tr><td colspan="6" style="text-align: center;"><strong>Jumlah per COA</strong></td></tr>';
+                    $td .= '<tr><td colspan="5" style="text-align: right;"><strong>Chart of Account</strong></td>';   
+                }
+                $td .= '<td><strong>Nominal</strong></td></tr>';
+                for ($i=0; $i < count($totalsk); $i++){
+                    $td .= '<tr><td colspan="5" style="text-align: right;">' . $totalsk[$i]['sub'] . '</td>';
+                    $td .= '<td style="text-align: right;">' . number_format($totalsk[$i]['total'],0,'.',',') . '</td></tr>';}
+                
+                $td .= '<tr><td colspan="5" style="text-align: right;"><strong>TOTAL</strong></td>';
+                $td .= '<td style="text-align: right;">' . number_format($totalnominal,0,'.',',') . '</td></tr>';
+                $td .= '<tr><td colspan="6" style="text-align: center;background-color: grey;"></td></tr>';
+            }
+            $td .= '</tbody><tfoot></tfoot></table>';
+
+            $td .= '<htmlpagefooter name="page-footer"><p align="right">{PAGENO} / {nb}</p></htmlpagefooter></body>';
+
+            $pdf = PDF::loadHTML($td, ['format' => 'Folio', 'margin_left' => 10]);
+        
+            $tf = 'RKA('.$dt1.'-'.$dt2.')'.date('His').'.pdf';
+
+            $pdf->save(public_path('/storage/'.$tf));
+
+            return response::json(['name'=>$tf,'filename'=>$tf]);
+        }
+    }
+
+    private function updateStatus()
+    {
+        $tf = date('dmyHi').'u'.Auth::user()->kode_unit;
+        Kaskecil::where([['status','bu'],['kode_unit',Auth::user()->kode_unit]])->update(['status' => $tf]);
+        $temp = 'create view reimburse'.date('dmY').'u'.Auth::user()->kode_unit.' as ';
+        $temp .= 'select * from kaskecil WHERE status = \''.$tf.'\'';
+        DB::statement($temp);
+
+    }
+
+    /*public function requestreimburse($mode)
     {
         $row = 0;
         if(str_contains($mode,'req'))
@@ -512,11 +732,11 @@ class KaskecilController extends Controller
                 { $td .= '<tr><td colspan="5" style="text-align: right;">'.$check ;}
 
             $td .= '<tr><td colspan="6"></td></tr><tr><td colspan="4">Total Per Sub Kode</td><td colspan="2">Total Per COA</td></tr>';
-            /*foreach ($totalcoa as $tc) {
+            foreach ($totalcoa as $tc) {
                 $td .= '<tr bgcolor="white"><td colspan="5" style="text-align: right;">'.$tc->kode_d_ger.'</td>';
                 $td .= '<td style="text-align: right;">';
                 $td .= number_format($tc->total,0,'','.').',00</td></tr>';
-            }*/
+            }
 
             //Start Total Per COA dan Total Per SUBKODE
             (count($totalcoa) > count($totalsk)) ? $totalrow=count($totalcoa) : $totalrow=count($totalsk);
@@ -614,15 +834,5 @@ class KaskecilController extends Controller
             Session::flash('flash_message','Laporan berhasil disimpan');
             $pdf->save('storage/'.$tf);return redirect('cheque');
         }
-    }
-
-    private function updateStatus()
-    {
-        $tf = date('dmyHi').'u'.Auth::user()->kode_unit;
-        Kaskecil::where([['status','bu'],['kode_unit',Auth::user()->kode_unit]])->update(['status' => $tf]);
-        $temp = 'create view reimburse'.date('dmY').'u'.Auth::user()->kode_unit.' as ';
-        $temp .= 'select * from kaskecil WHERE status = \''.$tf.'\'';
-        DB::statement($temp);
-
-    }
+    }*/
 }

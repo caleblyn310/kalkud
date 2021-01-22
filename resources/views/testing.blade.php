@@ -1,7 +1,35 @@
 @extends('layouts.app')
 
+@section('css')
+<style type="text/css">
+    .form-group{
+  padding:10px;
+  border:2px solid;
+  margin:10px;
+}
+.form-group>label{
+  position:absolute;
+  top:60px;
+  left:20px;
+  background-color:white;
+}
+
+.form-group>input{
+  border:none;
+}
+</style>
+
+<link rel="stylesheet" href="{{ asset('js/offline/themes/offline-theme-chrome.css') }}">
+<link rel="stylesheet" href="{{ asset('js/offline/themes/offline-language-english.css') }}">
+@stop
 
 @section('content')
+    <form id="first_name">
+    <div class="form-group">
+         <label>First name</label>
+         <input type="text" class="form-control input-lg" />
+    </div>
+</form>
     @include('datareim.datareimfilelist')
     <h2>Hallo Hallo</h2>
     <a href="{{ asset('mR') }}">MR</a>
@@ -45,9 +73,16 @@
 @stop
 
 @section('scripts')
+<script src="{{ asset('js/offline/offline.js') }}"></script>
+<script src="{{ asset('js/offline/js/snake.js') }}"></script>
 <script src="{{ asset('js/webprint.js') }}"></script>
 <script src="{{ asset('terbilang/jTerbilang.js') }}"></script>
   <script type="text/javascript">
+    Offline.options = {
+      checkOnLoad: true,
+      game: true
+    };
+
     $('#sub').click(function (e) {
         $("#terbilang-input").html($('#terbilang').val());
         $("#terbilang-input").val($('#terbilang').val());

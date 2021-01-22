@@ -28,7 +28,7 @@ class LoginController extends Controller
      *
      * @var string
      */
-    protected $redirectTo = '/';
+    protected $redirectTo = '/main';
 
     /**
      * Create a new controller instance.
@@ -48,7 +48,8 @@ class LoginController extends Controller
     protected function redirectTo()
     {
         DB::table('login_log')->insert(['user_id'=>Auth::user()->kode_unit]);
-        return '/main';
+        //dd(Auth::user()->kode_unit);
+        return ('/main');
     }
 
 
@@ -58,7 +59,7 @@ class LoginController extends Controller
 
         $request->session()->invalidate();
 
-        return redirect('/main');
+        return redirect('/');
     }
 
 }
